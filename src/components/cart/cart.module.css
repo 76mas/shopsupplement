@@ -1,0 +1,105 @@
+.Popup {
+  background-color: white;
+  width: 100%;
+  border-radius: 0 0 32px 32px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+  max-height: 85vh;
+  outline: none;
+  position: relative;
+  overflow: hidden;
+  
+  /* Top-down movement logic */
+  transform: translateY(
+    calc(-1 * var(--drawer-snap-point-offset) + var(--drawer-swipe-movement-y))
+  );
+  
+  transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.Popup[data-swiping] {
+  transition-duration: 0ms;
+}
+
+.Backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  opacity: calc(1 - var(--drawer-swipe-progress));
+  transition: opacity 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.Backdrop[data-swiping] {
+  transition-duration: 0ms;
+}
+
+.Viewport {
+  position: fixed;
+  inset: 0;
+  z-index: 101;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* Start from top */
+  pointer-events: none;
+}
+
+.Scroll {
+  overflow-y: auto;
+  flex: 1;
+  padding: 0 20px 20px;
+  scrollbar-width: none;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.Scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.DragArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 20px 16px;
+  cursor: grab;
+  flex-shrink: 0;
+  touch-action: none;
+  user-select: none;
+}
+
+.DragArea:active {
+  cursor: grabbing;
+}
+
+.Handle {
+  width: 40px;
+  height: 5px;
+  background-color: #eee;
+  border-radius: 99px;
+  margin-top: 12px;
+}
+
+.Title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  margin: 0;
+  color: black;
+  text-align: right;
+  width: 100%;
+  padding: 0 20px;
+}
+
+/* Animations for top-down */
+.Popup[data-starting-style],
+.Popup[data-ending-style] {
+  transform: translateY(-100%);
+}
+
+.Backdrop[data-starting-style],
+.Backdrop[data-ending-style] {
+  opacity: 0;
+}
