@@ -6,13 +6,19 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
+    "@prisma/client": "^7.8.0",
+    "antd": "^6.3.7",
     "embla-carousel-react": "^8.6.0",
     "motion": "^12.38.0",
     "next": "16.2.4",
+    "prisma": "^7.8.0",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },

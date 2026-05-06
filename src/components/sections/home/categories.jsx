@@ -10,19 +10,19 @@ const categories = [
     position: "-left-8 -bottom-10 w-[110%] -rotate-12" 
   },
   {
-    name: "حوارق دهون وتنشيف",
+    name: "حوارق دهون",
     image: "https://3km3cceozg.ucarecd.net/c976d250-17c1-4537-b9f0-26cc8ec78406/-/preview/1000x1000/",
     className: "md:col-span-2",
     position: "-left-10 -bottom-16 w-[60%] -rotate-6"
   },
   {
-    name: "طاقة وباور (Pre-Workout)",
+    name: "طاقة وباور",
     image: "https://3km3cceozg.ucarecd.net/b0f4146b-cb83-443a-81aa-0d050ad95cf2/-/preview/1000x1000/",
     className: "md:col-span-2",
     position: "-left-10 -bottom-20 w-[65%] -rotate-12"
   },
   {
-    name: "فيتامينات وصحة عامة",
+    name: "فيتامينات",
     image: "https://3km3cceozg.ucarecd.net/d9974449-c794-4e5f-b211-1836d52bebae/-/preview/1000x1000/",
     className: "md:col-span-1",
     position: "-left-6 -bottom-10 w-[100%] -rotate-12"

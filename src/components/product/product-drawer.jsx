@@ -2,7 +2,7 @@
 import * as React from "react";
 import { Drawer } from "@base-ui/react/drawer";
 import { motion } from "motion/react";
-import styles from "@/app/products/drawer.module.css";
+import styles from "@/app/(shop)/products/drawer.module.css";
 import ProductDetailsContent from "./product-details-content";
 import Container from "@/components/container";
 

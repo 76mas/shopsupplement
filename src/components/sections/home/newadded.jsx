@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useState } from "react";
 import ProductDrawer from "@/components/product/product-drawer";
-
+import { motion } from "motion/react";
 // مصفوفة المنتجات (المضافة حديثاً)
 const products = [
 
@@ -237,6 +237,32 @@ const NewAdded = () => {
                     src={product.image}
                     alt={product.name}
                     className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-500"
+                  />
+
+                    <motion.div
+                    style={{
+                      maskImage: `url(${product.image})`,
+                      maskSize: "contain",
+                      maskRepeat: "no-repeat",
+                      maskPosition: "center",
+                      WebkitMaskImage: `url(${product.image})`,
+                      WebkitMaskSize: "contain",
+                      WebkitMaskRepeat: "no-repeat",
+                      WebkitMaskPosition: "center",
+                      background:
+                        "linear-gradient(110deg, transparent 0%, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%, transparent 100%)",
+                      backgroundSize: "200% 100%",
+                    }}
+                    animate={{
+                      backgroundPosition: ["200% 0%", "-200% 0%"],
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "linear",
+                      repeatDelay: 1,
+                    }}
+                    className="absolute inset-0 p-0 z-20 pointer-events-none  w-full h-auto"
                   />
                 </div>
 

@@ -3,6 +3,7 @@ import Container from "@/components/container";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { motion } from "motion/react";
 
 const Left = () => (
   <svg
@@ -44,7 +45,6 @@ import FilterContent, { FilterIcon } from "./filter-content";
 import MobileFilterDrawer from "./mobile-filter-drawer";
 import ProductDrawer from "@/components/product/product-drawer";
 
-
 const Allproducts = () => {
   const [minPrice, setMinPrice] = useState(25000);
   const [maxPrice, setMaxPrice] = useState(150000);
@@ -52,90 +52,105 @@ const Allproducts = () => {
   const [isProductDrawerOpen, setIsProductDrawerOpen] = useState(false);
   const router = useRouter();
 
-const products = [
-  {
-    id: 1,
-    name: "Whey Gold Standard",
-    price: 95000,
-    discountPrice: 85000,
-    discount: "-10%",
-    image: "https://3km3cceozg.ucarecd.net/b0f4146b-cb83-443a-81aa-0d050ad95cf2/-/preview/1000x1000/",
-    flavors: [{ name: "شوكولاتة", color: "#4B2C20" }, { name: "فانيليا", color: "#F3E5AB" }],
-    sizes: [{ name: "2.27 كجم", price_suffix: "" }, { name: "1 كجم", price_suffix: "- 40,000 د.ع" }]
-  },
-  {
-    id: 2,
-    name: "C4 Original Pre-Workout",
-    price: 45000,
-    image: "https://3km3cceozg.ucarecd.net/59156cd8-6e11-41ee-89d3-407a86abe03b/-/preview/1000x1000/",
-    flavors: [{ name: "توت بري", color: "#8A2BE2" }],
-    sizes: [{ name: "30 حصة", price_suffix: "" }]
-  },
-  {
-    id: 3,
-    name: "Creatine Monohydrate",
-    price: 35000,
-    discountPrice: 28000,
-    discount: "-20%",
-    image: "https://3km3cceozg.ucarecd.net/a744ef8d-4021-4d9e-aeeb-4b848423427a/-/preview/1000x1000/",
-    flavors: [{ name: "بدون نكهة", color: "#FFFFFF" }],
-    sizes: [{ name: "300 جم", price_suffix: "" }]
-  },
-  {
-    id: 4,
-    name: "Hydro Whey Protein",
-    price: 110000,
-    image: "https://3km3cceozg.ucarecd.net/9f4cdacc-cb08-4d36-b675-841dbc65f346/-/preview/1000x1000/",
-    flavors: [{ name: "شوكولاتة", color: "#4B2C20" }],
-    sizes: [{ name: "1.6 كجم", price_suffix: "" }]
-  },
-  {
-    id: 5,
-    name: "BCAA Energy",
-    price: 40000,
-    discountPrice: 32000,
-    discount: "-20%",
-    image: "https://3km3cceozg.ucarecd.net/27771e0a-c726-4e0b-b0e1-e5aa9f66c443/-/preview/1000x1000/",
-    flavors: [{ name: "بطيخ", color: "#FF4D4D" }],
-    sizes: [{ name: "30 حصة", price_suffix: "" }]
-  },
-  {
-    id: 6,
-    name: "Mass Tech Extreme",
-    price: 88000,
-    discountPrice: 79000,
-    discount: "-10%",
-    image: "https://3km3cceozg.ucarecd.net/c976d250-17c1-4537-b9f0-26cc8ec78406/-/preview/1000x1000/",
-    flavors: [{ name: "فانيليا", color: "#F3E5AB" }],
-    sizes: [{ name: "5.4 كجم", price_suffix: "" }]
-  },
-  {
-    id: 7,
-    name: "Isolate Protein",
-    price: 105000,
-    image: "https://3km3cceozg.ucarecd.net/d9974449-c794-4e5f-b211-1836d52bebae/-/preview/1000x1000/",
-    flavors: [{ name: "شوكولاتة", color: "#4B2C20" }],
-    sizes: [{ name: "2.27 كجم", price_suffix: "" }]
-  },
-  {
-    id: 9,
-    name: "Serious Mass Gainer",
-    price: 75000,
-    discountPrice: 65000,
-    discount: "-13%",
-    image: "https://3km3cceozg.ucarecd.net/a0649360-e5bc-45ae-b5b1-5021b81fc366/-/preview/1000x1000/",
-    flavors: [{ name: "موز", color: "#FFE135" }],
-    sizes: [{ name: "5.4 كجم", price_suffix: "" }]
-  },
-  {
-    id: 10,
-    name: "Casein Night Protein",
-    price: 90000,
-    image: "https://3km3cceozg.ucarecd.net/014f0430-78f1-41ba-9213-9a8537660288/-/preview/1000x1000/",
-    flavors: [{ name: "فانيليا", color: "#F3E5AB" }],
-    sizes: [{ name: "1.8 كجم", price_suffix: "" }]
-  },
-];
+  const products = [
+    {
+      id: 1,
+      name: "Whey Gold Standard",
+      price: 95000,
+      discountPrice: 85000,
+      discount: "-10%",
+      image:
+        "https://3km3cceozg.ucarecd.net/b0f4146b-cb83-443a-81aa-0d050ad95cf2/-/preview/1000x1000/",
+      flavors: [
+        { name: "شوكولاتة", color: "#4B2C20" },
+        { name: "فانيليا", color: "#F3E5AB" },
+      ],
+      sizes: [
+        { name: "2.27 كجم", price_suffix: "" },
+        { name: "1 كجم", price_suffix: "- 40,000 د.ع" },
+      ],
+    },
+    {
+      id: 2,
+      name: "C4 Original Pre-Workout",
+      price: 45000,
+      image:
+        "https://3km3cceozg.ucarecd.net/59156cd8-6e11-41ee-89d3-407a86abe03b/-/preview/1000x1000/",
+      flavors: [{ name: "توت بري", color: "#8A2BE2" }],
+      sizes: [{ name: "30 حصة", price_suffix: "" }],
+    },
+    {
+      id: 3,
+      name: "Creatine Monohydrate",
+      price: 35000,
+      discountPrice: 28000,
+      discount: "-20%",
+      image:
+        "https://3km3cceozg.ucarecd.net/a744ef8d-4021-4d9e-aeeb-4b848423427a/-/preview/1000x1000/",
+      flavors: [{ name: "بدون نكهة", color: "#FFFFFF" }],
+      sizes: [{ name: "300 جم", price_suffix: "" }],
+    },
+    {
+      id: 4,
+      name: "Hydro Whey Protein",
+      price: 110000,
+      image:
+        "https://3km3cceozg.ucarecd.net/9f4cdacc-cb08-4d36-b675-841dbc65f346/-/preview/1000x1000/",
+      flavors: [{ name: "شوكولاتة", color: "#4B2C20" }],
+      sizes: [{ name: "1.6 كجم", price_suffix: "" }],
+    },
+    {
+      id: 5,
+      name: "BCAA Energy",
+      price: 40000,
+      discountPrice: 32000,
+      discount: "-20%",
+      image:
+        "https://3km3cceozg.ucarecd.net/27771e0a-c726-4e0b-b0e1-e5aa9f66c443/-/preview/1000x1000/",
+      flavors: [{ name: "بطيخ", color: "#FF4D4D" }],
+      sizes: [{ name: "30 حصة", price_suffix: "" }],
+    },
+    {
+      id: 6,
+      name: "Mass Tech Extreme",
+      price: 88000,
+      discountPrice: 79000,
+      discount: "-10%",
+      image:
+        "https://3km3cceozg.ucarecd.net/c976d250-17c1-4537-b9f0-26cc8ec78406/-/preview/1000x1000/",
+      flavors: [{ name: "فانيليا", color: "#F3E5AB" }],
+      sizes: [{ name: "5.4 كجم", price_suffix: "" }],
+    },
+    {
+      id: 7,
+      name: "Isolate Protein",
+      price: 105000,
+      image:
+        "https://3km3cceozg.ucarecd.net/d9974449-c794-4e5f-b211-1836d52bebae/-/preview/1000x1000/",
+      flavors: [{ name: "شوكولاتة", color: "#4B2C20" }],
+      sizes: [{ name: "2.27 كجم", price_suffix: "" }],
+    },
+    {
+      id: 9,
+      name: "Serious Mass Gainer",
+      price: 75000,
+      discountPrice: 65000,
+      discount: "-13%",
+      image:
+        "https://3km3cceozg.ucarecd.net/a0649360-e5bc-45ae-b5b1-5021b81fc366/-/preview/1000x1000/",
+      flavors: [{ name: "موز", color: "#FFE135" }],
+      sizes: [{ name: "5.4 كجم", price_suffix: "" }],
+    },
+    {
+      id: 10,
+      name: "Casein Night Protein",
+      price: 90000,
+      image:
+        "https://3km3cceozg.ucarecd.net/014f0430-78f1-41ba-9213-9a8537660288/-/preview/1000x1000/",
+      flavors: [{ name: "فانيليا", color: "#F3E5AB" }],
+      sizes: [{ name: "1.8 كجم", price_suffix: "" }],
+    },
+  ];
   const handleMinChange = (e) => {
     const value = Math.min(Number(e.target.value), maxPrice - 1000);
     setMinPrice(value);
@@ -153,7 +168,10 @@ const products = [
     >
       <Container className="flex flex-col pt-3 px-4 md:px-0">
         <div className="flex items-center justify-start gap-2 mb-10">
-          <p className="font-bold text-xl cursor-pointer hover:text-black/60 transition-colors" onClick={() => router.push('/')}>
+          <p
+            className="font-bold text-xl cursor-pointer hover:text-black/60 transition-colors"
+            onClick={() => router.push("/")}
+          >
             الرئيسية
           </p>
           <Left />
@@ -161,19 +179,25 @@ const products = [
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8 w-full">
-
           {/* Desktop Filter Sidebar */}
           <div className="hidden lg:flex flex-col sticky top-24 w-[28%] lg:w-[25%] h-fit border p-6 border-[#88888833] rounded-[24px] bg-white shadow-sm">
-            <FilterContent minPrice={minPrice} maxPrice={maxPrice} handleMinChange={handleMinChange} handleMaxChange={handleMaxChange} />
+            <FilterContent
+              minPrice={minPrice}
+              maxPrice={maxPrice}
+              handleMinChange={handleMinChange}
+              handleMaxChange={handleMaxChange}
+            />
           </div>
 
           {/* products grid */}
           <div className="flex flex-col flex-1">
             <div className="flex items-center justify-between mb-8">
-              <h2 className="text-3xl font-black">ساعات متميزة</h2>
-              
+              <h2 className="text-3xl font-black">الكل</h2>
+
               <div className="flex items-center gap-4">
-                <p className="hidden md:block text-[#999] text-sm">تم جلب 10 منتجات من اصل 100 منتج</p>
+                <p className="hidden md:block text-[#999] text-sm">
+                  تم جلب 10 منتجات من اصل 100 منتج
+                </p>
                 <MobileFilterDrawer
                   minPrice={minPrice}
                   maxPrice={maxPrice}
@@ -190,7 +214,7 @@ const products = [
                   className="group cursor-pointer active:scale-[0.98] transition-all duration-200"
                 >
                   {/* حاوية الصورة */}
-                  <div 
+                  <div
                     onClick={() => {
                       // Instead of navigating, we open the drawer
                       setSelectedProduct({
@@ -208,11 +232,12 @@ const products = [
                           { name: "1 كجم", price_suffix: "" },
                           { name: "2.27 كجم", price_suffix: "+ 40,000 د.ع" },
                           { name: "4.5 كجم", price_suffix: "+ 90,000 د.ع" },
-                        ]
+                        ],
                       });
                       setIsProductDrawerOpen(true);
                     }}
-                    className="relative aspect-square bg-[#F0EEED] rounded-[24px] overflow-hidden mb-4 shadow-sm group-hover:shadow-md transition-shadow duration-300">
+                    className="relative aspect-square bg-[#F0EEED] rounded-[24px] overflow-hidden mb-4 shadow-sm group-hover:shadow-md transition-shadow duration-300"
+                  >
                     {product.discount && (
                       <span className="absolute top-4 left-4 bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-bold z-10">
                         {product.discount}
@@ -223,12 +248,34 @@ const products = [
                       alt={product.name}
                       className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
                     />
+                    <motion.div
+                      style={{
+                        maskImage: `url(${product.image})`,
+                        maskSize: "contain",
+                        maskRepeat: "no-repeat",
+                        maskPosition: "center",
+                        WebkitMaskImage: `url(${product.image})`,
+                        WebkitMaskSize: "contain",
+                        WebkitMaskRepeat: "no-repeat",
+                        WebkitMaskPosition: "center",
+                        background:
+                          "linear-gradient(110deg, transparent 0%, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%, transparent 100%)",
+                        backgroundSize: "200% 100%",
+                      }}
+                      animate={{
+                        backgroundPosition: ["200% 0%", "-200% 0%"],
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "linear",
+                        repeatDelay: 1,
+                      }}
+                      className="absolute inset-0 z-20 pointer-events-none  w-full h-auto"
+                    />
 
                     {/* Overlay for Quick Add/View */}
-                    <div
-                    
-                    
-                    className="absolute cursor-pointer inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-4">
+                    <div className="absolute cursor-pointer inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-4">
                       <button className="w-full cursor-pointer active:scale-[0.98] bg-white/90 backdrop-blur-sm text-black py-2 rounded-xl text-xs font-bold transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
                         إضافة للسلة
                       </button>
@@ -299,7 +346,7 @@ const products = [
         </div>
       </Container>
 
-      <ProductDrawer 
+      <ProductDrawer
         product={selectedProduct}
         open={isProductDrawerOpen}
         onOpenChange={setIsProductDrawerOpen}

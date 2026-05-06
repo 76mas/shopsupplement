@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { Drawer } from "@base-ui/react/drawer";
-import styles from "@/app/products/drawer.module.css";
+import styles from "@/app/(shop)/products/drawer.module.css";
 
 const CheckoutPage = () => {
   const [cartItems, setCartItems] = useState([
