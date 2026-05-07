@@ -58,6 +58,7 @@ model Product {
   categoryId  Int?
   productImages ProductImage[]
   createdAt   DateTime  @default(now())
+  deleteAt    DateTime?
   updatedAt   DateTime  @updatedAt
   orderItems  OrderItem[]
   priority    Int @default(0)
