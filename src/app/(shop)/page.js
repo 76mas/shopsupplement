@@ -11,7 +11,7 @@ export default function Home() {
       <MainSection />
       <BestSeller />
       <NewAdded />
-      <Categories />
+      {/* <Categories /> */}
       <CustomerComments />
     </div>
   );

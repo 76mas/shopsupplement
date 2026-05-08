@@ -1,162 +1,299 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useTransition } from 'react';
 import {
-  Table,
-  Button,
-  Modal,
-  Form,
-  Input,
-  InputNumber,
-  Select,
-  Switch,
-  Upload,
-  Space,
-  Tag,
-  Typography,
-  Card,
-  Row,
-  Col,
-  message,
-  ColorPicker,
-  Tooltip,
+  Table, Button, Modal, Form, Input, InputNumber,
+  Select, Switch, Space, Tag, Typography, Card,
+  Row, Col, message, Tooltip, Popconfirm,
+  Image, Upload, ColorPicker,
 } from 'antd';
 import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  UploadOutlined,
-  MinusCircleOutlined,
-  EyeOutlined,
+  PlusOutlined, EditOutlined, DeleteOutlined,
+  LoadingOutlined, MinusCircleOutlined,
 } from '@ant-design/icons';
+import {
+  getProducts, createProduct, updateProduct,
+  deleteProduct, getCategoriesList,
+} from './action';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
+const UPLOADCARE_PUB_KEY  = process.env.NEXT_PUBLIC_UPLOADCARE_PUBLIC_KEY;
+const UPLOADCARE_CDN_BASE = process.env.NEXT_PUBLIC_UPLOADCARE_CDN_BASE ?? 'https://ucarecdn.com';
 
-// Mock Categories
-const categories = [
-  { id: 1, name: 'بروتينات' },
-  { id: 2, name: 'أحماض أمينية' },
-  { id: 3, name: 'فيتامينات' },
-  { id: 4, name: 'حوارق دهون' },
-];
+// ─── Uploadcare thumbnail URL ─────────────────────────────
+// تحوّل: https://{cdn}/{uuid}/{filename}
+// إلى:   https://{cdn}/{uuid}/-/preview/200x200/{filename}
+function ucThumb(url, size = '200x200') {
+  if (!url) return url;
+  const uuidRe = /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
+  const m = url.match(uuidRe);
+  if (!m) return url;
+  const idx = url.indexOf(m[1]) + m[1].length;
+  return `${url.slice(0, idx)}/-/preview/${size}${url.slice(idx)}`;
+}
 
+// ─── رفع صورة إلى Uploadcare وإرجاع الرابط الحقيقي ────────
+async function uploadToUploadcare(file) {
+  // 1) رفع الملف
+  const fd = new FormData();
+  fd.append('UPLOADCARE_PUB_KEY', UPLOADCARE_PUB_KEY);
+  fd.append('UPLOADCARE_STORE', '1');
+  fd.append('file', file);
+
+  const uploadRes = await fetch('https://upload.uploadcare.com/base/', {
+    method: 'POST',
+    body: fd,
+  });
+  const uploadJson = await uploadRes.json();
+  if (!uploadJson.file) throw new Error('فشل رفع الصورة');
+
+  const uuid = uploadJson.file;
+
+  // 2) جلب اسم الملف الحقيقي من /info/
+  const infoRes = await fetch(
+    `https://upload.uploadcare.com/info/?pub_key=${UPLOADCARE_PUB_KEY}&file_id=${uuid}`
+  );
+  const infoJson = await infoRes.json();
+  const filename = infoJson.filename ?? file.name ?? '';
+
+  // 3) بناء الرابط الكامل: {CDN_BASE}/{uuid}/{filename}
+  const encodedName = encodeURIComponent(filename);
+  return `${UPLOADCARE_CDN_BASE}/${uuid}/${encodedName}`;
+}
+
+
+// ─── مكوّن Upload مخصص ────────────────────────────────────
+const ImageUploader = ({ value = [], onChange, max = 5 }) => {
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = async ({ file }) => {
+    try {
+      setUploading(true);
+      const url = await uploadToUploadcare(file);
+      onChange([...value, { uid: url, url, thumbUrl: ucThumb(url), status: 'done', name: file.name }]);
+    } catch {
+      message.error('فشل رفع الصورة');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemove = (file) => {
+    onChange(value.filter((f) => f.uid !== file.uid));
+  };
+
+  return (
+    <Upload
+      listType="picture-card"
+      fileList={value}
+      customRequest={handleUpload}
+      onRemove={handleRemove}
+      accept="image/*"
+      disabled={uploading || value.length >= max}
+    >
+      {value.length < max && (
+        <div>
+          {uploading ? <LoadingOutlined /> : <PlusOutlined />}
+          <div style={{ marginTop: 4, fontSize: 12 }}>رفع</div>
+        </div>
+      )}
+    </Upload>
+  );
+};
+
+// ─── الصفحة الرئيسية ─────────────────────────────────────
 const ProductPage = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [products, setProducts]   = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing]     = useState(null);
+  const [isPending, startTransition] = useTransition();
   const [form] = Form.useForm();
-  
-  // Mock Data for Table
-  const [data, setData] = useState([
-    {
-      key: '1',
-      id: 1,
-      name: 'Whey Gold Standard',
-      price: 95000,
-      stock: 45,
-      category: 'بروتينات',
-      isAvailable: true,
-      image: 'https://3km3cceozg.ucarecd.net/b0f4146b-cb83-443a-81aa-0d050ad95cf2/-/preview/1000x1000/',
-      flavors: [{ name: 'شوكولاتة', color: '#4B2C20' }, { name: 'فانيليا', color: '#F3E5AB' }],
-      sizes: [{ name: '2.27 كجم', price: 95000 }, { name: '1 كجم', price: 55000 }],
-    },
-    {
-      key: '2',
-      id: 2,
-      name: 'C4 Original',
-      price: 45000,
-      stock: 12,
-      category: 'طاقة',
-      isAvailable: true,
-      image: 'https://3km3cceozg.ucarecd.net/59156cd8-6e11-41ee-89d3-407a86abe03b/-/preview/1000x1000/',
-      flavors: [{ name: 'توت بري', color: '#8A2BE2' }],
-      sizes: [{ name: '30 حصة', price: 45000 }],
-    },
-  ]);
 
-  const showModal = () => {
-    setIsModalOpen(true);
+  // صور موجودة (عند التعديل) — لعرضها ومتابعة الحذف
+  const [existingImages, setExistingImages] = useState([]);
+  const [removedImageIds, setRemovedImageIds] = useState([]);
+
+  // ─── جلب البيانات ───────────────────────────────────────
+  const fetchAll = async () => {
+    setLoading(true);
+    const [pRes, cRes] = await Promise.all([getProducts(), getCategoriesList()]);
+    if (pRes.success) setProducts(pRes.data.map((p) => ({ ...p, key: p.id })));
+    if (cRes.success) setCategories(cRes.data);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchAll(); }, []);
+
+  // ─── فتح مودال الإضافة ───────────────────────────────────
+  const openAdd = () => {
+    setEditing(null);
+    setExistingImages([]);
+    setRemovedImageIds([]);
+    form.resetFields();
+    form.setFieldsValue({ isAvailable: true, images: [] });
+    setModalOpen(true);
+  };
+
+  // ─── فتح مودال التعديل ───────────────────────────────────
+  const openEdit = (record) => {
+    setEditing(record);
+    setRemovedImageIds([]);
+    const imgs = record.productImages ?? [];
+    setExistingImages(imgs);
+
+    // نصفي أولاً لمنع بقايا القيم من جلسة سابقة
+    form.resetFields();
+    form.setFieldsValue({
+      name: record.name,
+      description: record.description ?? '',
+      price: Number(record.price),
+      endPrice: Number(record.endPrice),
+      stock: record.stock,
+      isAvailable: record.isAvailable,
+      categoryId: record.categoryId ?? undefined,
+      sizes: (record.sizes ?? []).map((s) => ({
+        name: s.name,
+        price: Number(s.price),
+      })),
+      flavors: (record.flavors ?? []).map((f) => ({
+        name: f.name,
+        color: f.color ?? '#000000',
+      })),
+      images: [],
+    });
+    setModalOpen(true);
   };
 
   const handleCancel = () => {
-    setIsModalOpen(false);
+    setModalOpen(false);
     form.resetFields();
+    setEditing(null);
+    setExistingImages([]);
+    setRemovedImageIds([]);
   };
 
+  // ─── حفظ ─────────────────────────────────────────────────
   const onFinish = (values) => {
-    console.log('Form Values:', values);
-    message.success('تمت إضافة المنتج بنجاح (بيانات وهمية)');
-    setIsModalOpen(false);
-    form.resetFields();
+    startTransition(async () => {
+      // استخراج روابط الصور الجديدة
+      const newImageUrls = (values.images ?? []).map((f) => f.url);
+
+      // تنسيق الـ flavors (ColorPicker يُرجع object)
+      const flavors = (values.flavors ?? []).map((f) => ({
+        name: f.name,
+        color: typeof f.color === 'string' ? f.color : f.color?.toHexString?.() ?? f.color,
+      }));
+
+      let res;
+      if (editing) {
+        res = await updateProduct(editing.id, {
+          ...values,
+          flavors,
+          newImages: newImageUrls,
+          removedImageIds,
+        });
+      } else {
+        res = await createProduct({
+          ...values,
+          flavors,
+          images: newImageUrls,
+        });
+      }
+
+      if (res.success) {
+        message.success(res.message);
+        handleCancel();
+        fetchAll();
+      } else {
+        message.error(res.message);
+      }
+    });
   };
 
+  // ─── حذف ─────────────────────────────────────────────────
+  const handleDelete = (id) => {
+    startTransition(async () => {
+      const res = await deleteProduct(id);
+      if (res.success) { message.success(res.message); fetchAll(); }
+      else message.error(res.message);
+    });
+  };
+
+  // ─── أعمدة الجدول ────────────────────────────────────────
   const columns = [
     {
       title: 'المنتج',
-      dataIndex: 'name',
       key: 'name',
-      render: (text, record) => (
+      render: (_, r) => (
         <Space>
-          <div style={{ 
-            width: 40, 
-            height: 40, 
-            borderRadius: 8, 
-            overflow: 'hidden', 
-            background: '#f0f0f0',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            <img src={record.image} alt={text} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <div style={{ width: 44, height: 44, borderRadius: 8, overflow: 'hidden', background: '#f5f5f5', flexShrink: 0 }}>
+            {r.productImages?.[0]?.image ? (
+              <Image src={r.productImages[0].image} alt={r.name}
+                width={44} height={44} style={{ objectFit: 'cover' }} preview={false} />
+            ) : (
+              <div style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ccc' }}>
+                <PlusOutlined />
+              </div>
+            )}
           </div>
-          <Text strong>{text}</Text>
+          <div>
+            <Text strong style={{ display: 'block' }}>{r.name}</Text>
+            <Text type="secondary" style={{ fontSize: 12 }}>{r.description?.slice(0, 40)}{r.description?.length > 40 ? '...' : ''}</Text>
+          </div>
         </Space>
       ),
     },
     {
       title: 'الفئة',
-      dataIndex: 'category',
       key: 'category',
-      render: (category) => <Tag color="blue">{category}</Tag>,
+      render: (_, r) => r.category ? <Tag color="blue">{r.category.name}</Tag> : <Text type="secondary">—</Text>,
     },
     {
       title: 'السعر',
-      dataIndex: 'price',
       key: 'price',
-      render: (price) => <Text strong>{price.toLocaleString()} د.ع</Text>,
+      render: (_, r) => (
+        <Space direction="vertical" size={0}>
+          <Text strong>{Number(r.endPrice).toLocaleString()} د.ع</Text>
+          {Number(r.price) !== Number(r.endPrice) && (
+            <Text delete type="secondary" style={{ fontSize: 12 }}>{Number(r.price).toLocaleString()} د.ع</Text>
+          )}
+        </Space>
+      ),
     },
     {
       title: 'المخزون',
       dataIndex: 'stock',
       key: 'stock',
-      render: (stock) => (
-        <Text type={stock < 10 ? 'danger' : 'success'} strong>
-          {stock} قطعة
-        </Text>
-      ),
+      render: (s) => <Text type={s < 10 ? 'danger' : 'success'} strong>{s} قطعة</Text>,
     },
     {
       title: 'الحالة',
       dataIndex: 'isAvailable',
       key: 'isAvailable',
-      render: (available) => (
-        <Tag color={available ? 'green' : 'red'}>
-          {available ? 'متوفر' : 'غير متوفر'}
-        </Tag>
-      ),
+      render: (a) => <Tag color={a ? 'green' : 'red'}>{a ? 'متوفر' : 'غير متوفر'}</Tag>,
     },
     {
       title: 'الإجراءات',
       key: 'action',
-      render: () => (
+      render: (_, r) => (
         <Space>
-          <Tooltip title="عرض">
-            <Button type="text" icon={<EyeOutlined />} />
-          </Tooltip>
           <Tooltip title="تعديل">
-            <Button type="text" icon={<EditOutlined style={{ color: '#1677ff' }} />} />
+            <Button type="text" icon={<EditOutlined style={{ color: '#1677ff' }} />} onClick={() => openEdit(r)} />
           </Tooltip>
-          <Tooltip title="حذف">
-            <Button type="text" icon={<DeleteOutlined style={{ color: '#ff4d4f' }} />} />
-          </Tooltip>
+          <Popconfirm
+            title="حذف المنتج"
+            description={`هل أنت متأكد من حذف "${r.name}"؟`}
+            onConfirm={() => handleDelete(r.id)}
+            okText="نعم، احذف" cancelText="إلغاء"
+            okButtonProps={{ danger: true }}
+            placement="topLeft"
+          >
+            <Tooltip title="حذف">
+              <Button type="text" icon={<DeleteOutlined style={{ color: '#ff4d4f' }} />} />
+            </Tooltip>
+          </Popconfirm>
         </Space>
       ),
     },
@@ -164,226 +301,192 @@ const ProductPage = () => {
 
   return (
     <div style={{ direction: 'rtl' }}>
+      {/* Header */}
       <Row gutter={[24, 24]} align="middle" style={{ marginBottom: 24 }}>
         <Col span={12}>
           <Title level={2} style={{ margin: 0 }}>المنتجات</Title>
           <Text type="secondary">إدارة منتجات المتجر وتحديث تفاصيلها</Text>
         </Col>
         <Col span={12} style={{ textAlign: 'left' }}>
-          <Button 
-            type="primary" 
-            icon={<PlusOutlined />} 
-            size="large" 
-            onClick={showModal}
-            style={{ borderRadius: 10, height: 45, padding: '0 24px' }}
-          >
+          <Button type="primary" icon={<PlusOutlined />} size="large" onClick={openAdd}
+            style={{ borderRadius: 10, height: 45, padding: '0 24px' }}>
             إضافة منتج جديد
           </Button>
         </Col>
       </Row>
 
-      <Card bordered={false} style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-        <Table 
-          columns={columns} 
-          dataSource={data} 
-          pagination={{ pageSize: 10 }}
-        />
+      {/* Table */}
+      <Card variant="borderless" style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+        <Table columns={columns} dataSource={products} pagination={{ pageSize: 10 }}
+          loading={{ spinning: loading, indicator: <LoadingOutlined style={{ fontSize: 28 }} spin /> }} />
       </Card>
 
-      {/* Add Product Modal */}
+      {/* Modal Add / Edit */}
       <Modal
-        title={<Title level={4}>إضافة منتج جديد</Title>}
-        open={isModalOpen}
-        onCancel={handleCancel}
-        onOk={() => form.submit()}
-        width={800}
-        okText="حفظ المنتج"
-        cancelText="إلغاء"
-        centered
+        title={<Title level={4} style={{ margin: 0 }}>{editing ? 'تعديل المنتج' : 'إضافة منتج جديد'}</Title>}
+        open={modalOpen} onCancel={handleCancel} onOk={() => form.submit()}
+        width={860} okText={editing ? 'حفظ التعديلات' : 'حفظ المنتج'}
+        cancelText="إلغاء" centered confirmLoading={isPending}
         okButtonProps={{ style: { borderRadius: 8, height: 40 } }}
         cancelButtonProps={{ style: { borderRadius: 8, height: 40 } }}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={onFinish}
-          initialValues={{ isAvailable: true }}
-          style={{ marginTop: 24 }}
-        >
+        <Form form={form} layout="vertical" onFinish={onFinish}
+          initialValues={{ isAvailable: true, images: [] }}
+          style={{ marginTop: 16 }}>
+          
           <Row gutter={24}>
+            {/* يسار: معلومات */}
             <Col span={16}>
-              <Form.Item
-                name="name"
-                label="اسم المنتج"
-                rules={[{ required: true, message: 'يرجى إدخال اسم المنتج' }]}
-              >
+              <Form.Item name="name" label="اسم المنتج"
+                rules={[{ required: true, message: 'يرجى إدخال اسم المنتج' }]}>
                 <Input placeholder="مثال: Whey Gold Standard" size="large" />
               </Form.Item>
-              
-              <Form.Item
-                name="description"
-                label="وصف المنتج"
-              >
-                <TextArea rows={4} placeholder="اكتب وصفاً تفصيلياً للمنتج..." />
+              <Form.Item name="description" label="وصف المنتج">
+                <TextArea rows={3} placeholder="اكتب وصفاً تفصيلياً للمنتج..." />
               </Form.Item>
             </Col>
-            
-            <Col span={8}>
-              <Form.Item label="صورة المنتج الرئيسية">
-                <Upload
-                  listType="picture-card"
-                  maxCount={1}
-                  beforeUpload={() => false}
-                >
-                  <div>
-                    <PlusOutlined />
-                    <div style={{ marginTop: 8 }}>رفع صورة</div>
-                  </div>
-                </Upload>
-              </Form.Item>
 
-              <Form.Item
-                name="categoryId"
-                label="الفئة"
-                rules={[{ required: true, message: 'يرجى اختيار الفئة' }]}
-              >
-                <Select placeholder="اختر الفئة" size="large">
-                  {categories.map(cat => (
-                    <Select.Option key={cat.id} value={cat.id}>{cat.name}</Select.Option>
+            {/* يمين: فئة */}
+            <Col span={8}>
+              <Form.Item name="categoryId" label="الفئة">
+                <Select placeholder="اختر الفئة" size="large" allowClear>
+                  {categories.map((c) => (
+                    <Select.Option key={c.id} value={c.id}>{c.name}</Select.Option>
                   ))}
                 </Select>
               </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={24}>
-            <Col span={8}>
-              <Form.Item
-                name="price"
-                label="السعر الأساسي"
-                rules={[{ required: true, message: 'يرجى إدخال السعر' }]}
-              >
-                <InputNumber 
-                  style={{ width: '100%' }} 
-                  size="large" 
-                  formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                  parser={value => value.replace(/\$\s?|(,*)/g, '')}
-                  addonAfter="د.ع"
-                />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item
-                name="stock"
-                label="المخزون"
-                rules={[{ required: true, message: 'يرجى إدخال الكمية' }]}
-              >
-                <InputNumber style={{ width: '100%' }} size="large" min={0} />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item
-                name="isAvailable"
-                label="حالة التوفر"
-                valuePropName="checked"
-              >
+              <Form.Item name="isAvailable" label="حالة التوفر" valuePropName="checked">
                 <Switch checkedChildren="متوفر" unCheckedChildren="غير متوفر" />
               </Form.Item>
             </Col>
           </Row>
 
-          <Card title="الأحجام المتوفرة" size="small" style={{ marginBottom: 24, borderRadius: 12 }}>
+          <Row gutter={24}>
+            <Col span={8}>
+              <Form.Item name="price" label="السعر الأساسي (قبل الخصم)"
+                rules={[{ required: true, message: 'يرجى إدخال السعر' }]}>
+                <InputNumber style={{ width: '100%' }} size="large" min={0}
+                  formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                  parser={(v) => v.replace(/,*/g, '')} addonAfter="د.ع" />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item name="endPrice" label="سعر البيع الفعلي"
+                rules={[{ required: true, message: 'يرجى إدخال سعر البيع' }]}>
+                <InputNumber style={{ width: '100%' }} size="large" min={0}
+                  formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                  parser={(v) => v.replace(/,*/g, '')} addonAfter="د.ع" />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item name="stock" label="المخزون"
+                rules={[{ required: true, message: 'يرجى إدخال الكمية' }]}>
+                <InputNumber style={{ width: '100%' }} size="large" min={0} />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          {/* صور المنتج */}
+          <Card size="small" title="صور المنتج" style={{ marginBottom: 16, borderRadius: 12 }}>
+            {/* صور موجودة (وضع التعديل) */}
+            {existingImages.length > 0 && (
+              <div style={{ marginBottom: 12 }}>
+                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 8 }}>
+                  الصور الحالية — اضغط ✕ لحذف صورة
+                </Text>
+                <Space wrap>
+                  {existingImages.map((img) => {
+                    const isRemoved = removedImageIds.includes(img.id);
+                    return (
+                      <div key={img.id} style={{ position: 'relative', display: 'inline-block' }}>
+                        <Image
+                          src={ucThumb(img.image, '120x120')}
+                          preview={{ src: img.image }}
+                          width={80} height={80}
+                          style={{ objectFit: 'cover', borderRadius: 8, opacity: isRemoved ? 0.35 : 1, display: 'block' }}
+                        />
+                        {!isRemoved ? (
+                          <Button
+                            size="small" danger shape="circle"
+                            style={{ position: 'absolute', top: -7, insetInlineStart: -7, minWidth: 22, width: 22, height: 22, fontSize: 11, padding: 0, lineHeight: '22px' }}
+                            onClick={() => setRemovedImageIds((p) => [...p, img.id])}
+                          >✕</Button>
+                        ) : (
+                          <div
+                            style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                            onClick={() => setRemovedImageIds((p) => p.filter((x) => x !== img.id))}
+                          >
+                            <Tag color="red" style={{ margin: 0, fontSize: 10 }}>تراجع</Tag>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </Space>
+              </div>
+            )}
+            <Form.Item name="images" label="رفع صور جديدة">
+              <ImageUploader max={8 - existingImages.length + removedImageIds.length} />
+            </Form.Item>
+          </Card>
+
+          {/* الأحجام */}
+          <Card size="small" title="الأحجام المتوفرة" style={{ marginBottom: 16, borderRadius: 12 }}>
             <Form.List name="sizes">
               {(fields, { add, remove }) => (
                 <>
-                  {fields.map(({ key, name, ...restField }) => (
+                  {fields.map(({ key, name, ...rest }) => (
                     <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
-                      <Form.Item
-                        {...restField}
-                        name={[name, 'name']}
-                        rules={[{ required: true, message: 'اسم الحجم' }]}
-                      >
-                        <Input placeholder="اسم الحجم (مثلاً: 2.27 كجم)" />
+                      <Form.Item {...rest} name={[name, 'name']}
+                        rules={[{ required: true, message: 'اسم الحجم' }]}>
+                        <Input placeholder="مثلاً: 2.27 كجم" />
                       </Form.Item>
-                      <Form.Item
-                        {...restField}
-                        name={[name, 'price']}
-                        rules={[{ required: true, message: 'السعر' }]}
-                      >
-                        <InputNumber placeholder="السعر الكامل" addonAfter="د.ع" style={{ width: 200 }} />
+                      <Form.Item {...rest} name={[name, 'price']}
+                        rules={[{ required: true, message: 'السعر' }]}>
+                        <InputNumber placeholder="السعر" addonAfter="د.ع" style={{ width: 180 }} min={0} />
                       </Form.Item>
-                      <MinusCircleOutlined onClick={() => remove(name)} />
+                      <MinusCircleOutlined style={{ color: '#ff4d4f' }} onClick={() => remove(name)} />
                     </Space>
                   ))}
-                  <Form.Item>
-                    <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
-                      إضافة حجم
-                    </Button>
-                  </Form.Item>
+                  <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
+                    إضافة حجم
+                  </Button>
                 </>
               )}
             </Form.List>
           </Card>
 
-          <Card title="النكهات والألوان" size="small" style={{ marginBottom: 24, borderRadius: 12 }}>
+          {/* النكهات */}
+          <Card size="small" title="النكهات والألوان" style={{ marginBottom: 8, borderRadius: 12 }}>
             <Form.List name="flavors">
               {(fields, { add, remove }) => (
                 <>
-                  {fields.map(({ key, name, ...restField }) => (
+                  {fields.map(({ key, name, ...rest }) => (
                     <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
-                      <Form.Item
-                        {...restField}
-                        name={[name, 'name']}
-                        rules={[{ required: true, message: 'اسم النكهة' }]}
-                      >
-                        <Input placeholder="اسم النكهة (مثلاً: شوكولاتة)" />
+                      <Form.Item {...rest} name={[name, 'name']}
+                        rules={[{ required: true, message: 'اسم النكهة' }]}>
+                        <Input placeholder="مثلاً: شوكولاتة" />
                       </Form.Item>
-                      <Form.Item
-                        {...restField}
-                        name={[name, 'color']}
-                        label="اللون في UI"
-                      >
+                      <Form.Item {...rest} name={[name, 'color']} label="اللون">
                         <ColorPicker showText />
                       </Form.Item>
-                      <MinusCircleOutlined onClick={() => remove(name)} />
+                      <MinusCircleOutlined style={{ color: '#ff4d4f' }} onClick={() => remove(name)} />
                     </Space>
                   ))}
-                  <Form.Item>
-                    <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
-                      إضافة نكهة
-                    </Button>
-                  </Form.Item>
+                  <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
+                    إضافة نكهة
+                  </Button>
                 </>
               )}
             </Form.List>
           </Card>
-
-          <Form.Item label="صور إضافية للمنتج (المعرض)">
-            <Upload
-              action="/upload.do"
-              listType="picture-card"
-              multiple
-            >
-              <div>
-                <PlusOutlined />
-                <div style={{ marginTop: 8 }}>رفع</div>
-              </div>
-            </Upload>
-          </Form.Item>
         </Form>
       </Modal>
 
       <style jsx global>{`
-        .ant-modal-title {
-          direction: rtl;
-        }
-        .ant-form-item-label {
-          padding-bottom: 4px !important;
-        }
-        .ant-form-item-label label {
-          font-weight: 600 !important;
-          font-size: 13px !important;
-        }
+        .ant-modal-title { direction: rtl; }
+        .ant-form-item-label { padding-bottom: 4px !important; }
+        .ant-form-item-label label { font-weight: 600 !important; font-size: 13px !important; }
       `}</style>
     </div>
   );

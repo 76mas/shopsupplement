@@ -4,6 +4,7 @@ import { Form, Input, Button, Card, Typography, Space, message, ConfigProvider }
 import { UserOutlined, LockOutlined, ArrowLeftOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
+import { loginAdmin } from './action';
 
 const { Title, Text } = Typography;
 
@@ -11,16 +12,27 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const onFinish = (values) => {
+  const onFinish = async (values) => {
     setLoading(true);
-    console.log('Login values:', values);
     
-    // Simulate API call
-    setTimeout(() => {
+    const formData = new FormData();
+    formData.append('phoneNumber', values.phoneNumber);
+    formData.append('password', values.password);
+
+    try {
+      const res = await loginAdmin(null, formData);
+      if (res.success) {
+        message.success(res.message);
+        router.push('/dashboard');
+        router.refresh();
+      } else {
+        message.error(res.message);
+        setLoading(false);
+      }
+    } catch (err) {
+      message.error('حدث خطأ غير متوقع');
       setLoading(false);
-      message.success('تم تسجيل الدخول بنجاح');
-      router.push('/dashboard');
-    }, 1500);
+    }
   };
 
   return (
@@ -63,7 +75,7 @@ const LoginPage = () => {
         style={{ zIndex: 1, width: '100%', maxWidth: '420px', padding: '0 20px' }}
       >
         <Card
-          bordered={false}
+          variant="borderless"
           style={{ 
             borderRadius: '24px', 
             boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',

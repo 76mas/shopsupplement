@@ -1,50 +1,101 @@
 "use client";
 import Container from "@/components/container";
-import { useState } from "react";
-import Image from "next/image";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Drawer } from "@base-ui/react/drawer";
 import styles from "@/app/(shop)/products/drawer.module.css";
+import { useCart } from "@/context/cart-context";
+import { useRouter } from "next/navigation";
+import { createOrder, buildWhatsAppUrl, getDeliveryPrice } from "./action";
 
 const CheckoutPage = () => {
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: "Whey Gold Standard",
-      price: 85000,
-      type: "بروتينات",
-      quantity: 1,
-      image:
-        "https://3km3cceozg.ucarecd.net/b0f4146b-cb83-443a-81aa-0d050ad95cf2/-/preview/1000x1000/",
-      flavor: "شوكولاتة غنية",
-      size: "2.27 كجم",
-    },
-    {
-      id: 2,
-      name: "C4 Original Pre-Workout",
-      price: 45000,
-      type: "طاقة وباور",
-      quantity: 1,
-      image:
-        "https://3km3cceozg.ucarecd.net/59156cd8-6e11-41ee-89d3-407a86abe03b/-/preview/1000x1000/",
-      flavor: "توت أزرق",
-      size: "30 حصة",
-    },
-  ]);
+  const {
+    items: cartItems,
+    removeItem: removeCartItem,
+    total: cartTotal,
+    clearCart,
+  } = useCart();
+  const router = useRouter();
 
+  // ── Form state ────────────────────────────────────────────
+  const [name, setName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [address, setAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("store");
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [deliveryPrice, setDeliveryPrice] = useState(5000);
 
-  const removeItem = (id) => {
-    setCartItems(cartItems.filter((item) => item.id !== id));
+  // ── Load delivery price from DB ───────────────────────────
+  useEffect(() => {
+    getDeliveryPrice().then((r) => {
+      if (r.success) setDeliveryPrice(r.price);
+    });
+  }, []);
+
+  const removeItem = (key) => removeCartItem(key);
+
+  const shipping = deliveryPrice;
+  const subtotal = cartTotal;
+  const total = subtotal + shipping;
+
+  // ── Validation ────────────────────────────────────────────
+  const validate = () => {
+    const e = {};
+    if (!name.trim()) e.name = "يرجى إدخال الاسم الكامل";
+    if (!phoneNumber.trim()) e.phoneNumber = "يرجى إدخال رقم الهاتف";
+    else if (
+      !/^(\+964|00964|0)7[3-9]\d{8}$/.test(phoneNumber.replace(/\s/g, ""))
+    )
+      e.phoneNumber = "رقم الهاتف غير صحيح (مثال: 07XXXXXXXX)";
+    if (!address.trim()) e.address = "يرجى إدخال العنوان بالتفصيل";
+    if (!cartItems.length) e.cart = "سلة الشراء فارغة";
+    setErrors(e);
+    return Object.keys(e).length === 0;
   };
 
-  const subtotal = cartItems.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0,
-  );
-  const shipping = 5000;
-  const total = subtotal + shipping;
+  // ── Submit ────────────────────────────────────────────────
+  const handleSubmit = async () => {
+    if (!validate()) return;
+    setSubmitting(true);
+
+    const payload = {
+      name,
+      phoneNumber,
+      address,
+      deliveryPrice: shipping,
+      items: cartItems.map((i) => ({
+        id: i.id,
+        name: i.name,
+        price: i.price,
+        quantity: i.quantity,
+        flavor: i.flavor,
+        size: i.size,
+      })),
+    };
+
+    if (paymentMethod === "whatsapp") {
+      // ── واتساب ─────────────────────────────────────────
+      const res = await buildWhatsAppUrl(payload);
+      setSubmitting(false);
+      if (!res.success) {
+        setErrors({ form: res.message });
+        return;
+      }
+      window.open(res.url, "_blank");
+    } else {
+      // ── إنشاء طلب في DB ────────────────────────────────
+      const res = await createOrder(payload);
+      setSubmitting(false);
+      if (!res.success) {
+        setErrors({ form: res.message });
+        return;
+      }
+      clearCart();
+      router.push(`/checkout/success?orderId=${res.orderId}`);
+    }
+  };
 
   return (
     <div
@@ -82,37 +133,71 @@ const CheckoutPage = () => {
               </h1>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="flex flex-col gap-3">
+                {/* الاسم */}
+                <div className="flex flex-col gap-2">
                   <label className="text-sm font-black text-black px-1 uppercase tracking-wider">
                     الاسم الكامل
                   </label>
                   <input
                     type="text"
+                    value={name}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      setErrors((p) => ({ ...p, name: "" }));
+                    }}
                     placeholder="مثال: محمد علي"
-                    className="w-full bg-[#F5F5F5] border-2 border-transparent rounded-[20px] px-6 py-5 outline-none focus:bg-white focus:border-black transition-all duration-300 text-base font-bold placeholder:text-gray-400"
+                    className={`w-full bg-[#F5F5F5] border-2 rounded-[20px] px-6 py-5 outline-none focus:bg-white transition-all duration-300 text-base font-bold placeholder:text-gray-400 ${errors.name ? "border-red-400 bg-red-50" : "border-transparent focus:border-black"}`}
                   />
+                  {errors.name && (
+                    <p className="text-red-500 text-xs font-bold px-2">
+                      {errors.name}
+                    </p>
+                  )}
                 </div>
 
-                <div className="flex flex-col gap-3">
+                {/* الهاتف */}
+                <div className="flex flex-col gap-2">
                   <label className="text-sm font-black text-black px-1 uppercase tracking-wider">
                     رقم الهاتف
                   </label>
                   <input
                     type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => {
+                      setPhoneNumber(e.target.value);
+                      setErrors((p) => ({ ...p, phoneNumber: "" }));
+                    }}
                     placeholder="07XXXXXXXX"
-                    className="w-full bg-[#F5F5F5] border-2 border-transparent rounded-[20px] px-6 py-5 outline-none focus:bg-white focus:border-black transition-all duration-300 text-base font-bold placeholder:text-gray-400"
+                    dir="ltr"
+                    className={`w-full bg-[#F5F5F5] border-2 rounded-[20px] px-6 py-5 outline-none focus:bg-white transition-all duration-300 text-base font-bold placeholder:text-gray-400 text-right ${errors.phoneNumber ? "border-red-400 bg-red-50" : "border-transparent focus:border-black"}`}
                   />
+                  {errors.phoneNumber && (
+                    <p className="text-red-500 text-xs font-bold px-2">
+                      {errors.phoneNumber}
+                    </p>
+                  )}
                 </div>
 
-                <div className="flex flex-col gap-3 md:col-span-2">
+                {/* العنوان */}
+                <div className="flex flex-col gap-2 md:col-span-2">
                   <label className="text-sm font-black text-black px-1 uppercase tracking-wider">
                     العنوان بالتفصيل
                   </label>
                   <textarea
+                    value={address}
+                    onChange={(e) => {
+                      setAddress(e.target.value);
+                      setErrors((p) => ({ ...p, address: "" }));
+                    }}
                     placeholder="المحافظة، المدينة، اسم الشارع، أقرب نقطة دالة"
                     rows="3"
-                    className="w-full bg-[#F5F5F5] border-2 border-transparent rounded-[24px] px-6 py-5 outline-none focus:bg-white focus:border-black transition-all duration-300 resize-none text-base font-bold placeholder:text-gray-400"
+                    className={`w-full bg-[#F5F5F5] border-2 rounded-[24px] px-6 py-5 outline-none focus:bg-white transition-all duration-300 resize-none text-base font-bold placeholder:text-gray-400 ${errors.address ? "border-red-400 bg-red-50" : "border-transparent focus:border-black"}`}
                   />
+                  {errors.address && (
+                    <p className="text-red-500 text-xs font-bold px-2">
+                      {errors.address}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -138,18 +223,10 @@ const CheckoutPage = () => {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setPaymentMethod("store")}
-                    className={`relative p-6 rounded-[28px] border-2 cursor-pointer transition-all duration-300 flex items-center gap-5 ${
-                      paymentMethod === "store"
-                        ? "border-black bg-black text-white shadow-xl shadow-black/10"
-                        : "border-gray-100 bg-[#F9F9F9] hover:border-gray-200"
-                    }`}
+                    className={`relative p-6 rounded-[28px] border-2 cursor-pointer transition-all duration-300 flex items-center gap-5 ${paymentMethod === "store" ? "border-black bg-black text-white shadow-xl shadow-black/10" : "border-gray-100 bg-[#F9F9F9] hover:border-gray-200"}`}
                   >
                     <div
-                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                        paymentMethod === "store"
-                          ? "border-white"
-                          : "border-gray-300"
-                      }`}
+                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${paymentMethod === "store" ? "border-white" : "border-gray-300"}`}
                     >
                       {paymentMethod === "store" && (
                         <div className="w-3 h-3 bg-white rounded-full" />
@@ -161,9 +238,7 @@ const CheckoutPage = () => {
                       >
                         عبر المتجر
                       </span>
-                      <span
-                        className={`text-[10px] font-bold ${paymentMethod === "store" ? "text-gray-400" : "text-gray-400"}`}
-                      >
+                      <span className="text-[10px] font-bold text-gray-400">
                         اتمام الطلب بالطريقة التقليدية
                       </span>
                     </div>
@@ -173,18 +248,10 @@ const CheckoutPage = () => {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setPaymentMethod("whatsapp")}
-                    className={`relative p-6 rounded-[28px] border-2 cursor-pointer transition-all duration-300 flex items-center gap-5 ${
-                      paymentMethod === "whatsapp"
-                        ? "border-green-500 bg-green-500 text-white shadow-xl shadow-green-200"
-                        : "border-gray-100 bg-[#F9F9F9] hover:border-gray-200"
-                    }`}
+                    className={`relative p-6 rounded-[28px] border-2 cursor-pointer transition-all duration-300 flex items-center gap-5 ${paymentMethod === "whatsapp" ? "border-green-500 bg-green-500 text-white shadow-xl shadow-green-200" : "border-gray-100 bg-[#F9F9F9] hover:border-gray-200"}`}
                   >
                     <div
-                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                        paymentMethod === "whatsapp"
-                          ? "border-white"
-                          : "border-gray-300"
-                      }`}
+                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${paymentMethod === "whatsapp" ? "border-white" : "border-gray-300"}`}
                     >
                       {paymentMethod === "whatsapp" && (
                         <div className="w-3 h-3 bg-white rounded-full" />
@@ -206,16 +273,44 @@ const CheckoutPage = () => {
                 </div>
               </div>
 
-              {/* Checkout Actions Moved Here */}
+              {/* Global error */}
+              {errors.form && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-[20px] text-red-600 font-bold text-sm text-center">
+                  {errors.form}
+                </div>
+              )}
+              {errors.cart && (
+                <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-[20px] text-amber-700 font-bold text-sm text-center">
+                  {errors.cart}
+                </div>
+              )}
+
+              {/* Submit Button */}
               <div className="pt-8 border-t border-gray-50">
                 <button
-                  className={`w-full py-6 rounded-[28px] font-black text-xl transition-all active:scale-[0.98] shadow-2xl flex items-center justify-center gap-4 ${
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  className={`w-full py-6 rounded-[28px] font-black text-xl transition-all active:scale-[0.98] shadow-2xl flex items-center justify-center gap-4 disabled:opacity-60 disabled:cursor-not-allowed ${
                     paymentMethod === "store"
                       ? "bg-black text-white hover:bg-black/90 shadow-black/20"
                       : "bg-green-500 text-white hover:bg-green-600 shadow-green-500/20"
                   }`}
                 >
-                  {paymentMethod === "store" ? (
+                  {submitting ? (
+                    <svg
+                      className="animate-spin"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                    </svg>
+                  ) : paymentMethod === "store" ? (
                     <>
                       تأكيد الطلب
                       <svg
@@ -474,14 +569,28 @@ const SummaryContent = ({
     <div
       className={`flex flex-col gap-6 mb-10 ${!isDrawer ? "max-h-[350px]" : "max-h-[45vh]"} overflow-y-auto scrollbar-hide pr-1`}
     >
+      {cartItems.length === 0 && (
+        <div className="py-10 text-center text-gray-400 text-sm font-bold">
+          سلتك فارغة
+        </div>
+      )}
       {cartItems.map((item) => (
-        <div key={item.id} className="flex gap-5 group items-center">
+        <div
+          key={item.key ?? item.id}
+          className="flex gap-5 group items-center"
+        >
           <div className="w-16 h-16 rounded-[18px] overflow-hidden bg-[#F9F9F9] shrink-0 border border-gray-100">
-            <img
-              src={item.image}
-              alt={item.name}
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-            />
+            {item.image ? (
+              <img
+                src={item.image}
+                alt={item.name}
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              />
+            ) : (
+              <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-300 text-xs">
+                لا صورة
+              </div>
+            )}
           </div>
           <div className="flex-1 flex flex-col justify-center">
             <h4 className="font-bold text-sm text-black line-clamp-1">
@@ -502,7 +611,7 @@ const SummaryContent = ({
             </div>
           </div>
           <button
-            onClick={() => removeItem(item.id)}
+            onClick={() => removeItem(item.key ?? item.id)}
             className="w-8 h-8 rounded-full flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all"
           >
             <svg

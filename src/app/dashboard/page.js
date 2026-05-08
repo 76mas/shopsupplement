@@ -1,147 +1,155 @@
 'use client';
-import React from 'react';
-import { Row, Col, Card, Statistic, Typography, Table, Tag, Space, Button } from 'antd';
-import { 
-  ArrowUpOutlined, 
-  ArrowDownOutlined, 
-  ShoppingCartOutlined, 
-  UserOutlined, 
-  DollarOutlined, 
-  RiseOutlined,
-  EyeOutlined
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Row, Col, Card, Typography, Table, Tag, Space,
+  Button, Spin, Statistic,
+} from 'antd';
+import {
+  ArrowUpOutlined,
+  ShoppingCartOutlined,
+  ShoppingOutlined,
+  UserOutlined,
+  DollarOutlined,
+  AppstoreOutlined,
+  ClockCircleOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  EyeOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons';
+import { useRouter } from 'next/navigation';
+import { getDashboardStats } from './action';
 
 const { Title, Text } = Typography;
 
+const getStatusTag = (status) => {
+  switch (status) {
+    case 'PENDING':    return <Tag icon={<ClockCircleOutlined />}  color="warning">قيد الانتظار</Tag>;
+    case 'COMPLETED':  return <Tag icon={<CheckCircleOutlined />}  color="success">مكتمل</Tag>;
+    case 'CANCELLED':  return <Tag icon={<CloseCircleOutlined />}  color="error">ملغي</Tag>;
+    default:           return <Tag>{status}</Tag>;
+  }
+};
+
 export default function DashboardPage() {
-  const stats = [
+  const router = useRouter();
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchStats = useCallback(async () => {
+    setLoading(true);
+    const res = await getDashboardStats();
+    if (res.success) setStats(res.data);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchStats(); }, [fetchStats]);
+
+  const statCards = stats ? [
     {
       title: 'إجمالي المبيعات',
-      value: '1,240,000',
-      prefix: 'IQD',
-      trend: '+12.5%',
-      trendType: 'up',
+      value: stats.totalRevenue.toLocaleString(),
+      suffix: 'د.ع',
       icon: <DollarOutlined style={{ color: '#01caa8' }} />,
-      color: '#01caa8'
+      color: '#01caa8',
+      sub: `${stats.completedOrders} طلب مكتمل`,
     },
     {
-      title: 'الطلبات الجديدة',
-      value: '42',
-      trend: '+4.2%',
-      trendType: 'up',
-      icon: <ShoppingCartOutlined style={{ color: '#1677ff' }} />,
-      color: '#1677ff'
+      title: 'الطلبات المعلقة',
+      value: stats.pendingOrders,
+      icon: <ShoppingCartOutlined style={{ color: '#faad14' }} />,
+      color: '#faad14',
+      sub: `${stats.totalOrders} إجمالي الطلبات`,
     },
     {
-      title: 'الزبائن الجدد',
-      value: '12',
-      trend: '-2.1%',
-      trendType: 'down',
+      title: 'المنتجات النشطة',
+      value: stats.totalProducts,
+      icon: <ShoppingOutlined style={{ color: '#1677ff' }} />,
+      color: '#1677ff',
+      sub: `${stats.totalCategories} فئة`,
+    },
+    {
+      title: 'المدراء',
+      value: stats.totalAdmins,
       icon: <UserOutlined style={{ color: '#722ed1' }} />,
-      color: '#722ed1'
+      color: '#722ed1',
+      sub: 'حساب نشط',
     },
-    {
-      title: 'زيارات اليوم',
-      value: '850',
-      trend: '+15.8%',
-      trendType: 'up',
-      icon: <RiseOutlined style={{ color: '#faad14' }} />,
-      color: '#faad14'
-    }
-  ];
+  ] : [];
 
   const columns = [
     {
       title: 'رقم الطلب',
       dataIndex: 'id',
       key: 'id',
-      render: (text) => <a>#{text}</a>,
+      render: (id) => <Text strong>#{id}</Text>,
     },
     {
       title: 'الزبون',
-      dataIndex: 'customer',
-      key: 'customer',
+      dataIndex: 'name',
+      key: 'name',
+      render: (name) => <Text>{name}</Text>,
     },
     {
       title: 'التاريخ',
-      dataIndex: 'date',
-      key: 'date',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      render: (date) => (
+        <Text type="secondary">
+          {new Date(date).toLocaleDateString('ar-IQ', {
+            year: 'numeric', month: 'short', day: 'numeric',
+          })}
+        </Text>
+      ),
     },
     {
       title: 'المبلغ',
-      dataIndex: 'amount',
-      key: 'amount',
+      dataIndex: 'totalPrice',
+      key: 'totalPrice',
+      render: (v) => <Text strong style={{ color: '#01caa8' }}>{Number(v).toLocaleString()} د.ع</Text>,
     },
     {
       title: 'الحالة',
-      key: 'status',
       dataIndex: 'status',
-      render: (status) => {
-        let color = 'geekblue';
-        let text = 'قيد المعالجة';
-        if (status === 'completed') {
-          color = 'green';
-          text = 'مكتمل';
-        } else if (status === 'pending') {
-          color = 'volcano';
-          text = 'قيد الانتظار';
-        }
-        return (
-          <Tag color={color} key={status}>
-            {text}
-          </Tag>
-        );
-      },
+      key: 'status',
+      render: (status) => getStatusTag(status),
     },
     {
       title: 'الإجراءات',
       key: 'action',
-      render: () => (
-        <Space size="middle">
-          <Button type="text" icon={<EyeOutlined />} />
-        </Space>
+      render: (_, record) => (
+        <Button
+          type="text"
+          icon={<EyeOutlined />}
+          onClick={() => router.push(`/dashboard/ordders/${record.id}`)}
+        />
       ),
     },
   ];
 
-  const data = [
-    {
-      key: '1',
-      id: '1024',
-      customer: 'محمد جاسم',
-      date: '2024-05-06',
-      amount: '45,000 IQD',
-      status: 'completed',
-    },
-    {
-      key: '2',
-      id: '1025',
-      customer: 'علي حسين',
-      date: '2024-05-06',
-      amount: '25,000 IQD',
-      status: 'pending',
-    },
-    {
-      key: '3',
-      id: '1026',
-      customer: 'سارة أحمد',
-      date: '2024-05-05',
-      amount: '120,000 IQD',
-      status: 'processing',
-    },
-  ];
+  if (loading) return (
+    <div style={{ textAlign: 'center', padding: 80 }}>
+      <Spin size="large" />
+    </div>
+  );
 
   return (
-    <div style={{ padding: '0 0 32px 0' }}>
-      <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
-        <Col span={24}>
-          <Title level={2}>نظرة عامة</Title>
-          <Text type="secondary">مرحباً بك مجدداً، إليك ملخص لأداء المتجر اليوم.</Text>
+    <div style={{ padding: '0 0 32px 0', direction: 'rtl' }}>
+      <Row gutter={[24, 24]} style={{ marginBottom: 32 }} align="middle">
+        <Col flex="auto">
+          <Title level={2} style={{ margin: 0 }}>نظرة عامة</Title>
+          <Text type="secondary">مرحباً بك مجدداً، إليك ملخص لأداء المتجر.</Text>
+        </Col>
+        <Col>
+          <Button icon={<ReloadOutlined />} onClick={fetchStats} loading={loading}>
+            تحديث
+          </Button>
         </Col>
       </Row>
 
+      {/* Stat Cards */}
       <Row gutter={[24, 24]}>
-        {stats.map((stat, index) => (
+        {statCards.map((stat, index) => (
           <Col xs={24} sm={12} lg={6} key={index}>
             <Card bordered={false} style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -149,33 +157,17 @@ export default function DashboardPage() {
                   <Text type="secondary" style={{ fontSize: 14 }}>{stat.title}</Text>
                   <div style={{ marginTop: 8, display: 'flex', alignItems: 'baseline', gap: 8 }}>
                     <Title level={3} style={{ margin: 0 }}>{stat.value}</Title>
-                    {stat.prefix && <Text type="secondary">{stat.prefix}</Text>}
+                    {stat.suffix && <Text type="secondary" style={{ fontSize: 13 }}>{stat.suffix}</Text>}
                   </div>
-                  <div style={{ marginTop: 8 }}>
-                    <Text 
-                      style={{ 
-                        color: stat.trendType === 'up' ? '#52c41a' : '#ff4d4f',
-                        fontSize: 12,
-                        fontWeight: 'bold',
-                        background: stat.trendType === 'up' ? '#f6ffed' : '#fff1f0',
-                        padding: '2px 8px',
-                        borderRadius: 4
-                      }}
-                    >
-                      {stat.trendType === 'up' ? <ArrowUpOutlined /> : <ArrowDownOutlined />} {stat.trend}
-                    </Text>
-                    <Text type="secondary" style={{ fontSize: 12, marginRight: 8 }}>مقارنة بالشهر الماضي</Text>
-                  </div>
+                  <Text type="secondary" style={{ fontSize: 12, marginTop: 6, display: 'block' }}>
+                    {stat.sub}
+                  </Text>
                 </div>
-                <div style={{ 
-                  width: 48, 
-                  height: 48, 
-                  borderRadius: 12, 
-                  background: `${stat.color}15`, 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  fontSize: 24
+                <div style={{
+                  width: 48, height: 48, borderRadius: 12,
+                  background: `${stat.color}18`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 24,
                 }}>
                   {stat.icon}
                 </div>
@@ -185,15 +177,49 @@ export default function DashboardPage() {
         ))}
       </Row>
 
-      <Row gutter={[24, 24]} style={{ marginTop: 32 }}>
+      {/* Order Status Summary */}
+      {stats && (
+        <Row gutter={[24, 24]} style={{ marginTop: 24 }}>
+          <Col xs={24} sm={8}>
+            <Card bordered={false} style={{ borderRadius: 16, textAlign: 'center', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+              <ClockCircleOutlined style={{ fontSize: 28, color: '#faad14', marginBottom: 8 }} />
+              <Statistic title="قيد الانتظار" value={stats.pendingOrders} valueStyle={{ color: '#faad14' }} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Card bordered={false} style={{ borderRadius: 16, textAlign: 'center', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+              <CheckCircleOutlined style={{ fontSize: 28, color: '#52c41a', marginBottom: 8 }} />
+              <Statistic title="مكتملة" value={stats.completedOrders} valueStyle={{ color: '#52c41a' }} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Card bordered={false} style={{ borderRadius: 16, textAlign: 'center', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+              <CloseCircleOutlined style={{ fontSize: 28, color: '#ff4d4f', marginBottom: 8 }} />
+              <Statistic title="ملغية" value={stats.cancelledOrders} valueStyle={{ color: '#ff4d4f' }} />
+            </Card>
+          </Col>
+        </Row>
+      )}
+
+      {/* Recent Orders Table */}
+      <Row gutter={[24, 24]} style={{ marginTop: 24 }}>
         <Col span={24}>
-          <Card 
-            title="آخر الطلبات" 
-            bordered={false} 
+          <Card
+            title="آخر الطلبات"
+            bordered={false}
             style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}
-            extra={<Button type="link">عرض الكل</Button>}
+            extra={
+              <Button type="link" onClick={() => router.push('/dashboard/ordders')}>
+                عرض الكل
+              </Button>
+            }
           >
-            <Table columns={columns} dataSource={data} pagination={false} />
+            <Table
+              columns={columns}
+              dataSource={(stats?.recentOrders ?? []).map((o) => ({ ...o, key: o.id }))}
+              pagination={false}
+              locale={{ emptyText: 'لا يوجد طلبات حتى الآن' }}
+            />
           </Card>
         </Col>
       </Row>

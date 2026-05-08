@@ -1,177 +1,147 @@
 "use client";
 import Container from "@/components/container";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { motion } from "motion/react";
+import { useState, useEffect, useCallback, useTransition } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { motion, AnimatePresence } from "motion/react";
+import FilterContent, { FilterIcon } from "./filter-content";
+import MobileFilterDrawer from "./mobile-filter-drawer";
+import ProductDrawer from "@/components/product/product-drawer";
+import { getShopProducts } from "./action";
+import { useCart } from "@/context/cart-context";
 
 const Left = () => (
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M15 6C15 6 9.00001 10.4189 9 12C8.99999 13.5812 15 18 15 18"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M15 6C15 6 9.00001 10.4189 9 12C8.99999 13.5812 15 18 15 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
 const Right = () => (
-  <svg
-    width="8"
-    height="14"
-    viewBox="0 0 8 14"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M0.75005 0.75C0.75005 0.75 6.75 5.1689 6.75 6.75C6.75 8.3312 0.75 12.75 0.75 12.75"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
+  <svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0.75005 0.75C0.75005 0.75 6.75 5.1689 6.75 6.75C6.75 8.3312 0.75 12.75 0.75 12.75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
-import FilterContent, { FilterIcon } from "./filter-content";
-import MobileFilterDrawer from "./mobile-filter-drawer";
-import ProductDrawer from "@/components/product/product-drawer";
+// ── Skeleton card ──────────────────────────────────────────
+const SkeletonCard = () => (
+  <div className="animate-pulse">
+    <div className="aspect-square bg-gray-100 rounded-[24px] mb-4" />
+    <div className="h-4 bg-gray-100 rounded-full w-3/4 mb-2" />
+    <div className="h-4 bg-gray-100 rounded-full w-1/2" />
+  </div>
+);
 
 const Allproducts = () => {
-  const [minPrice, setMinPrice] = useState(25000);
-  const [maxPrice, setMaxPrice] = useState(150000);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [isProductDrawerOpen, setIsProductDrawerOpen] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
 
-  const products = [
-    {
-      id: 1,
-      name: "Whey Gold Standard",
-      price: 95000,
-      discountPrice: 85000,
-      discount: "-10%",
-      image:
-        "https://3km3cceozg.ucarecd.net/b0f4146b-cb83-443a-81aa-0d050ad95cf2/-/preview/1000x1000/",
-      flavors: [
-        { name: "شوكولاتة", color: "#4B2C20" },
-        { name: "فانيليا", color: "#F3E5AB" },
-      ],
-      sizes: [
-        { name: "2.27 كجم", price_suffix: "" },
-        { name: "1 كجم", price_suffix: "- 40,000 د.ع" },
-      ],
-    },
-    {
-      id: 2,
-      name: "C4 Original Pre-Workout",
-      price: 45000,
-      image:
-        "https://3km3cceozg.ucarecd.net/59156cd8-6e11-41ee-89d3-407a86abe03b/-/preview/1000x1000/",
-      flavors: [{ name: "توت بري", color: "#8A2BE2" }],
-      sizes: [{ name: "30 حصة", price_suffix: "" }],
-    },
-    {
-      id: 3,
-      name: "Creatine Monohydrate",
-      price: 35000,
-      discountPrice: 28000,
-      discount: "-20%",
-      image:
-        "https://3km3cceozg.ucarecd.net/a744ef8d-4021-4d9e-aeeb-4b848423427a/-/preview/1000x1000/",
-      flavors: [{ name: "بدون نكهة", color: "#FFFFFF" }],
-      sizes: [{ name: "300 جم", price_suffix: "" }],
-    },
-    {
-      id: 4,
-      name: "Hydro Whey Protein",
-      price: 110000,
-      image:
-        "https://3km3cceozg.ucarecd.net/9f4cdacc-cb08-4d36-b675-841dbc65f346/-/preview/1000x1000/",
-      flavors: [{ name: "شوكولاتة", color: "#4B2C20" }],
-      sizes: [{ name: "1.6 كجم", price_suffix: "" }],
-    },
-    {
-      id: 5,
-      name: "BCAA Energy",
-      price: 40000,
-      discountPrice: 32000,
-      discount: "-20%",
-      image:
-        "https://3km3cceozg.ucarecd.net/27771e0a-c726-4e0b-b0e1-e5aa9f66c443/-/preview/1000x1000/",
-      flavors: [{ name: "بطيخ", color: "#FF4D4D" }],
-      sizes: [{ name: "30 حصة", price_suffix: "" }],
-    },
-    {
-      id: 6,
-      name: "Mass Tech Extreme",
-      price: 88000,
-      discountPrice: 79000,
-      discount: "-10%",
-      image:
-        "https://3km3cceozg.ucarecd.net/c976d250-17c1-4537-b9f0-26cc8ec78406/-/preview/1000x1000/",
-      flavors: [{ name: "فانيليا", color: "#F3E5AB" }],
-      sizes: [{ name: "5.4 كجم", price_suffix: "" }],
-    },
-    {
-      id: 7,
-      name: "Isolate Protein",
-      price: 105000,
-      image:
-        "https://3km3cceozg.ucarecd.net/d9974449-c794-4e5f-b211-1836d52bebae/-/preview/1000x1000/",
-      flavors: [{ name: "شوكولاتة", color: "#4B2C20" }],
-      sizes: [{ name: "2.27 كجم", price_suffix: "" }],
-    },
-    {
-      id: 9,
-      name: "Serious Mass Gainer",
-      price: 75000,
-      discountPrice: 65000,
-      discount: "-13%",
-      image:
-        "https://3km3cceozg.ucarecd.net/a0649360-e5bc-45ae-b5b1-5021b81fc366/-/preview/1000x1000/",
-      flavors: [{ name: "موز", color: "#FFE135" }],
-      sizes: [{ name: "5.4 كجم", price_suffix: "" }],
-    },
-    {
-      id: 10,
-      name: "Casein Night Protein",
-      price: 90000,
-      image:
-        "https://3km3cceozg.ucarecd.net/014f0430-78f1-41ba-9213-9a8537660288/-/preview/1000x1000/",
-      flavors: [{ name: "فانيليا", color: "#F3E5AB" }],
-      sizes: [{ name: "1.8 كجم", price_suffix: "" }],
-    },
-  ];
-  const handleMinChange = (e) => {
-    const value = Math.min(Number(e.target.value), maxPrice - 1000);
-    setMinPrice(value);
+  // ── Filter state (controlled) ──────────────────────────
+  const [minPrice, setMinPrice] = useState(0);
+  const [maxPrice, setMaxPrice] = useState(200000);
+  const [selectedCategory, setSelectedCategory] = useState(null); // id or null
+  const [page, setPage] = useState(1);
+
+  // ── Products state ──────────────────────────────────────
+  const [products, setProducts] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
+
+  // ── Drawer state ────────────────────────────────────────
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  const { addItem } = useCart();
+
+  // ── Fetch products ───────────────────────────────────────
+  const fetchProducts = useCallback(async (opts = {}) => {
+    setLoading(true);
+    // نستخدم 'categoryId' in opts للتمييز بين null المقصود وغياب القيمة
+    const categoryId = 'categoryId' in opts ? opts.categoryId : selectedCategory;
+    const res = await getShopProducts({
+      categoryId,
+      minPrice: opts.minPrice ?? (minPrice > 0 ? minPrice : undefined),
+      maxPrice: opts.maxPrice ?? (maxPrice < 200000 ? maxPrice : undefined),
+      page: opts.page ?? page,
+    });
+    if (res.success) {
+      setProducts(res.data);
+      setTotal(res.total);
+      setTotalPages(res.totalPages);
+    }
+    setLoading(false);
+  }, [selectedCategory, minPrice, maxPrice, page]);
+
+  useEffect(() => { fetchProducts(); }, []);
+
+  // ── Apply filter ─────────────────────────────────────────
+  const applyFilter = () => {
+    setPage(1);
+    startTransition(() => {
+      fetchProducts({ page: 1 });
+    });
   };
 
-  const handleMaxChange = (e) => {
-    const value = Math.max(Number(e.target.value), minPrice + 1000);
-    setMaxPrice(value);
+  // ── Category click ───────────────────────────────────────
+  const handleCategoryChange = (id) => {
+    // id=null يعني "الكل" — إذا ضغط نفس الفئة مرتين يرجع للكل
+    const next = (id !== null && id === selectedCategory) ? null : id;
+    setSelectedCategory(next);
+    setPage(1);
+    startTransition(() => {
+      fetchProducts({ categoryId: next, page: 1 });
+    });
+  };
+
+  // ── Page change ──────────────────────────────────────────
+  const handlePageChange = (p) => {
+    if (p < 1 || p > totalPages) return;
+    setPage(p);
+    startTransition(() => {
+      fetchProducts({ page: p });
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // ── Quick add (from card hover button) ───────────────────
+  const handleQuickAdd = (e, product) => {
+    e.stopPropagation();
+    const flavors = Array.isArray(product.flavors) ? product.flavors : [];
+    const sizes = Array.isArray(product.sizes) ? product.sizes : [];
+    addItem(product, {
+      flavor: flavors[0] ?? null,
+      size: sizes[0] ?? null,
+      quantity: 1,
+    });
+  };
+
+  // ── Open product drawer ───────────────────────────────────
+  const openProductDrawer = (product) => {
+    setSelectedProduct(product);
+    setIsDrawerOpen(true);
+  };
+
+  // ── Pagination pages array ────────────────────────────────
+  const getPagesArray = () => {
+    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    const pages = [1];
+    if (page > 3) pages.push("...");
+    for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) {
+      pages.push(i);
+    }
+    if (page < totalPages - 2) pages.push("...");
+    pages.push(totalPages);
+    return pages;
   };
 
   return (
-    <div
-      className="w-full text-black py-20 min-h-screen flex justify-center bg-white"
-      dir="rtl"
-    >
+    <div className="w-full text-black py-20 min-h-screen flex justify-center bg-white" dir="rtl">
       <Container className="flex flex-col pt-3 px-4 md:px-0">
+
+        {/* Breadcrumb */}
         <div className="flex items-center justify-start gap-2 mb-10">
-          <p
-            className="font-bold text-xl cursor-pointer hover:text-black/60 transition-colors"
-            onClick={() => router.push("/")}
-          >
+          <p className="font-bold text-xl cursor-pointer hover:text-black/60 transition-colors" onClick={() => router.push("/")}>
             الرئيسية
           </p>
           <Left />
@@ -179,177 +149,216 @@ const Allproducts = () => {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8 w-full">
-          {/* Desktop Filter Sidebar */}
+
+          {/* ── Desktop Filter Sidebar ─────────────────────── */}
           <div className="hidden lg:flex flex-col sticky top-24 w-[28%] lg:w-[25%] h-fit border p-6 border-[#88888833] rounded-[24px] bg-white shadow-sm">
             <FilterContent
               minPrice={minPrice}
               maxPrice={maxPrice}
-              handleMinChange={handleMinChange}
-              handleMaxChange={handleMaxChange}
+              handleMinChange={(e) => setMinPrice(Math.min(Number(e.target.value), maxPrice - 1000))}
+              handleMaxChange={(e) => setMaxPrice(Math.max(Number(e.target.value), minPrice + 1000))}
+              selectedCategory={selectedCategory}
+              onCategoryChange={handleCategoryChange}
+              onApply={applyFilter}
             />
           </div>
 
-          {/* products grid */}
+          {/* ── Products grid ──────────────────────────────── */}
           <div className="flex flex-col flex-1">
             <div className="flex items-center justify-between mb-8">
-              <h2 className="text-3xl font-black">الكل</h2>
-
+              <h2 className="text-3xl font-black">
+                {selectedCategory ? "الفئة المختارة" : "الكل"}
+              </h2>
               <div className="flex items-center gap-4">
                 <p className="hidden md:block text-[#999] text-sm">
-                  تم جلب 10 منتجات من اصل 100 منتج
+                  {loading ? "جاري التحميل..." : `${total} منتج`}
                 </p>
                 <MobileFilterDrawer
                   minPrice={minPrice}
                   maxPrice={maxPrice}
-                  handleMinChange={handleMinChange}
-                  handleMaxChange={handleMaxChange}
+                  handleMinChange={(e) => setMinPrice(Math.min(Number(e.target.value), maxPrice - 1000))}
+                  handleMaxChange={(e) => setMaxPrice(Math.max(Number(e.target.value), minPrice + 1000))}
+                  selectedCategory={selectedCategory}
+                  onCategoryChange={handleCategoryChange}
+                  onApply={applyFilter}
                 />
               </div>
             </div>
 
+            {/* Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 md:gap-x-6 gap-y-10">
-              {products.map((product) => (
-                <div
-                  key={product.id}
-                  className="group cursor-pointer active:scale-[0.98] transition-all duration-200"
-                >
-                  {/* حاوية الصورة */}
-                  <div
-                    onClick={() => {
-                      // Instead of navigating, we open the drawer
-                      setSelectedProduct({
-                        ...product,
-                        // Add mock details since the list has limited data
-                        description: "وصف المنتج",
-                        images: [product.image, product.image, product.image], // Mock gallery
-                        flavors: [
-                          { name: "شوكولاتة غنية", color: "#4B2C20" },
-                          { name: "فانيليا ناعمة", color: "#F3E5AB" },
-                          { name: "فراولة طازجة", color: "#FF4D4D" },
-                          { name: "موز", color: "#FFE135" },
-                        ],
-                        sizes: [
-                          { name: "1 كجم", price_suffix: "" },
-                          { name: "2.27 كجم", price_suffix: "+ 40,000 د.ع" },
-                          { name: "4.5 كجم", price_suffix: "+ 90,000 د.ع" },
-                        ],
-                      });
-                      setIsProductDrawerOpen(true);
-                    }}
-                    className="relative aspect-square bg-[#F0EEED] rounded-[24px] overflow-hidden mb-4 shadow-sm group-hover:shadow-md transition-shadow duration-300"
-                  >
-                    {product.discount && (
-                      <span className="absolute top-4 left-4 bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-bold z-10">
-                        {product.discount}
-                      </span>
-                    )}
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
-                    />
+              {loading
+                ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
+                : products.map((product) => {
+                  const image = product.productImages?.[0]?.image;
+                  const endPrice = Number(product.endPrice);
+                  const price = Number(product.price);
+                  const hasDiscount = price > endPrice;
+                  const discountPct = hasDiscount ? Math.round((1 - endPrice / price) * 100) : 0;
+                  const isAvailable = product.isAvailable;
+
+                  return (
                     <motion.div
-                      style={{
-                        maskImage: `url(${product.image})`,
-                        maskSize: "contain",
-                        maskRepeat: "no-repeat",
-                        maskPosition: "center",
-                        WebkitMaskImage: `url(${product.image})`,
-                        WebkitMaskSize: "contain",
-                        WebkitMaskRepeat: "no-repeat",
-                        WebkitMaskPosition: "center",
-                        background:
-                          "linear-gradient(110deg, transparent 0%, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%, transparent 100%)",
-                        backgroundSize: "200% 100%",
-                      }}
-                      animate={{
-                        backgroundPosition: ["200% 0%", "-200% 0%"],
-                      }}
-                      transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                        ease: "linear",
-                        repeatDelay: 1,
-                      }}
-                      className="absolute inset-0 z-20 pointer-events-none  w-full h-auto"
-                    />
-
-                    {/* Overlay for Quick Add/View */}
-                    <div className="absolute cursor-pointer inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-4">
-                      <button className="w-full cursor-pointer active:scale-[0.98] bg-white/90 backdrop-blur-sm text-black py-2 rounded-xl text-xs font-bold transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                        إضافة للسلة
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* تفاصيل المنتج */}
-                  <div className="text-right space-y-1.5 px-1">
-                    <h3 className="text-base md:text-lg font-bold text-black truncate group-hover:text-black/70 transition-colors">
-                      {product.name}
-                    </h3>
-
-                    <div className="flex items-center justify-start gap-2 font-black">
-                      {product.discountPrice ? (
-                        <>
-                          <span className="text-lg text-black">
-                            {product.discountPrice.toLocaleString()} د.ع
+                      key={product.id}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="group cursor-pointer active:scale-[0.98] transition-all duration-200"
+                    >
+                      {/* Image container */}
+                      <div
+                        onClick={() => openProductDrawer(product)}
+                        className={`relative aspect-square bg-[#F0EEED] rounded-[24px] overflow-hidden mb-4 shadow-sm transition-shadow duration-300 ${isAvailable ? 'group-hover:shadow-md' : 'opacity-80'}`}
+                      >
+                        {/* Discount badge */}
+                        {hasDiscount && isAvailable && (
+                          <span className="absolute top-4 left-4 bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-bold z-10">
+                            -{discountPct}%
                           </span>
-                          <span className="text-[#999] line-through text-xs font-medium">
-                            {product.price.toLocaleString()} د.ع
-                          </span>
-                        </>
-                      ) : (
-                        <span className="text-lg text-black">
-                          {product.price.toLocaleString()} د.ع
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
+                        )}
+
+                        {/* Out of stock overlay */}
+                        {!isAvailable && (
+                          <>
+                            {/* Diagonal stripes */}
+                            <div
+                              className="absolute inset-0 z-20 pointer-events-none"
+                              style={{
+                                background: 'repeating-linear-gradient(45deg, rgba(0,0,0,0.07) 0px, rgba(0,0,0,0.07) 2px, transparent 2px, transparent 12px)',
+                              }}
+                            />
+                            {/* Badge */}
+                            <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
+                              <span className="bg-black/80 text-white text-xs font-black px-4 py-2 rounded-full tracking-wider backdrop-blur-sm">
+                                غير متوفر
+                              </span>
+                            </div>
+                          </>
+                        )}
+
+                        {image ? (
+                          <img
+                            src={image}
+                            alt={product.name}
+                            className={`object-cover w-full h-full transition-transform duration-500 ${isAvailable ? 'group-hover:scale-105' : 'grayscale-[30%]'}`}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-300">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-5-5L5 21" /></svg>
+                          </div>
+                        )}
+
+                        {/* Shimmer (available only) */}
+                        {isAvailable && (
+                          <motion.div
+                            style={{
+                              background: "linear-gradient(110deg, transparent 0%, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%, transparent 100%)",
+                              backgroundSize: "200% 100%",
+                            }}
+                            animate={{ backgroundPosition: ["200% 0%", "-200% 0%"] }}
+                            transition={{ duration: 3, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
+                            className="absolute inset-0 z-20 pointer-events-none"
+                          />
+                        )}
+
+                        {/* Quick Add hover button */}
+                        <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-4 z-30">
+                          {isAvailable ? (
+                            <button
+                              onClick={(e) => handleQuickAdd(e, product)}
+                              className="w-full cursor-pointer active:scale-[0.98] bg-white/90 backdrop-blur-sm text-black py-2 rounded-xl text-xs font-bold transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
+                            >
+                              إضافة للسلة
+                            </button>
+                          ) : (
+                            <div className="w-full bg-black/60 backdrop-blur-sm text-white/70 py-2 rounded-xl text-xs font-bold text-center transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 cursor-not-allowed">
+                              نفذ من المخزون
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Details */}
+                      <div className="text-right space-y-1.5 px-1" onClick={() => openProductDrawer(product)}>
+                        <h3 className="text-base md:text-lg font-bold text-black truncate group-hover:text-black/70 transition-colors">
+                          {product.name}
+                        </h3>
+                        <div className="flex items-center justify-start gap-2 font-black">
+                          {hasDiscount ? (
+                            <>
+                              <span className="text-lg text-black">{endPrice.toLocaleString()} د.ع</span>
+                              <span className="text-[#999] line-through text-xs font-medium">{price.toLocaleString()} د.ع</span>
+                            </>
+                          ) : (
+                            <span className="text-lg text-black">{endPrice.toLocaleString()} د.ع</span>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
             </div>
+
+            {/* Empty state */}
+            {!loading && products.length === 0 && (
+              <div className="py-24 text-center flex flex-col items-center gap-4 text-gray-400">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
+                <p className="font-bold text-lg">لا توجد منتجات تطابق الفلتر</p>
+                <button onClick={() => { setSelectedCategory(null); setMinPrice(0); setMaxPrice(200000); fetchProducts({ categoryId: null, minPrice: undefined, maxPrice: undefined, page: 1 }); }} className="text-black underline font-bold text-sm">
+                  إعادة تعيين الفلتر
+                </button>
+              </div>
+            )}
 
             {/* Pagination */}
-            <div className="mt-10 md:mt-16 flex items-center justify-between border-t border-[#88888822] pt-6 md:pt-8">
-              <button className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 rounded-xl border border-[#88888833] text-sm font-bold hover:bg-black hover:text-white hover:border-black transition-all group cursor-pointer active:scale-95">
-                <div className="group-hover:invert text-black group-hover:text-white transition-all ">
-                  <Right />
-                </div>
-                <span className="hidden md:block">السابق</span>
-              </button>
+            {totalPages > 1 && (
+              <div className="mt-10 md:mt-16 flex items-center justify-between border-t border-[#88888822] pt-6 md:pt-8">
+                <button
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page === 1}
+                  className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 rounded-xl border border-[#88888833] text-sm font-bold hover:bg-black hover:text-white hover:border-black transition-all group cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <div className="group-hover:invert transition-all"><Right /></div>
+                  <span className="hidden md:block">السابق</span>
+                </button>
 
-              <div className="flex items-center gap-1 sm:gap-2">
-                {[1, 2, 3, "...", 10].map((page, index) => (
-                  <button
-                    key={index}
-                    className={`w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
-                      page === 1
-                        ? "bg-black text-white"
-                        : page === "..."
-                          ? "cursor-default text-[#999]"
-                          : "hover:bg-[#f5f5f5] text-[#555]"
-                    } ${page === 2 || page === 3 ? "hidden sm:flex" : "flex"}`}
-                  >
-                    {page}
-                  </button>
-                ))}
+                <div className="flex items-center gap-1 sm:gap-2">
+                  {getPagesArray().map((p, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => p !== "..." && handlePageChange(p)}
+                      className={`w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                        p === page
+                          ? "bg-black text-white"
+                          : p === "..."
+                            ? "cursor-default text-[#999]"
+                            : "hover:bg-[#f5f5f5] text-[#555]"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={page === totalPages}
+                  className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 rounded-xl border border-[#88888833] text-sm font-bold hover:bg-black hover:text-white hover:border-black transition-all group cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <span className="hidden md:block">التالي</span>
+                  <div className="rotate-180 group-hover:invert transition-all"><Right /></div>
+                </button>
               </div>
-
-              <button className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 rounded-xl border border-[#88888833] text-sm font-bold hover:bg-black hover:text-white hover:border-black transition-all group cursor-pointer active:scale-95">
-                <span className="hidden md:block">التالي</span>
-                <div className="rotate-180 group-hover:invert text-black group-hover:text-white transition-all">
-                  <Right />
-                </div>
-              </button>
-            </div>
+            )}
           </div>
         </div>
       </Container>
 
+      {/* Product Drawer */}
       <ProductDrawer
         product={selectedProduct}
-        open={isProductDrawerOpen}
-        onOpenChange={setIsProductDrawerOpen}
+        open={isDrawerOpen}
+        onOpenChange={setIsDrawerOpen}
       />
     </div>
   );

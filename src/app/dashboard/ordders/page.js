@@ -1,19 +1,19 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Table,
   Button,
-  Modal,
   Space,
   Tag,
   Typography,
   Card,
   Row,
   Col,
-  Descriptions,
-  Divider,
   Avatar,
   Tooltip,
+  Spin,
+  Select,
+  message,
 } from 'antd';
 import {
   EyeOutlined,
@@ -22,82 +22,63 @@ import {
   ClockCircleOutlined,
   CloseCircleOutlined,
   UserOutlined,
-  PhoneOutlined,
-  EnvironmentOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
+import { getOrders, updateOrderStatus } from './action';
 
 const { Title, Text } = Typography;
 
+const statusOptions = [
+  { value: 'PENDING', label: 'قيد الانتظار', color: 'warning' },
+  { value: 'COMPLETED', label: 'مكتمل', color: 'success' },
+  { value: 'CANCELLED', label: 'ملغي', color: 'error' },
+];
+
+const getStatusTag = (status) => {
+  switch (status) {
+    case 'PENDING':
+      return <Tag icon={<ClockCircleOutlined />} color="warning">قيد الانتظار</Tag>;
+    case 'COMPLETED':
+      return <Tag icon={<CheckCircleOutlined />} color="success">مكتمل</Tag>;
+    case 'CANCELLED':
+      return <Tag icon={<CloseCircleOutlined />} color="error">ملغي</Tag>;
+    default:
+      return <Tag>{status}</Tag>;
+  }
+};
+
 const OrdersPage = () => {
   const router = useRouter();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [statusUpdating, setStatusUpdating] = useState(null); // id of the row being updated
 
-  // Mock Data for Orders
-  const mockOrders = [
-    {
-      key: '1',
-      id: 1024,
-      customerName: 'محمد جاسم العلي',
-      phone: '07701234567',
-      address: 'بغداد، المنصور، شارع 14 رمضان',
-      status: 'PENDING',
-      totalPrice: 135000,
-      createdAt: '2024-05-06 14:30',
-      items: [
-        { id: 1, name: 'Whey Gold Standard', flavor: 'شوكولاتة', size: '2.27 كجم', quantity: 1, price: 95000, image: 'https://3km3cceozg.ucarecd.net/b0f4146b-cb83-443a-81aa-0d050ad95cf2/-/preview/1000x1000/' },
-        { id: 2, name: 'Creatine Monohydrate', flavor: 'بدون نكهة', size: '300 جم', quantity: 1, price: 35000, image: 'https://3km3cceozg.ucarecd.net/a744ef8d-4021-4d9e-aeeb-4b848423427a/-/preview/1000x1000/' },
-      ]
-    },
-    {
-      key: '2',
-      id: 1025,
-      customerName: 'سارة أحمد محمود',
-      phone: '07812345678',
-      address: 'أربيل، شارع 60، مجمع كولان',
-      status: 'COMPLETED',
-      totalPrice: 45000,
-      createdAt: '2024-05-06 11:20',
-      items: [
-        { id: 3, name: 'C4 Original', flavor: 'توت أزرق', size: '30 حصة', quantity: 1, price: 45000, image: 'https://3km3cceozg.ucarecd.net/59156cd8-6e11-41ee-89d3-407a86abe03b/-/preview/1000x1000/' },
-      ]
-    },
-    {
-      key: '3',
-      id: 1026,
-      customerName: 'علي حسين كاظم',
-      phone: '07509876543',
-      address: 'البصرة، العشار، قرب ساحة أم البروم',
-      status: 'CANCELLED',
-      totalPrice: 110000,
-      createdAt: '2024-05-05 18:45',
-      items: [
-        { id: 4, name: 'Hydro Whey Protein', flavor: 'شوكولاتة', size: '1.6 كجم', quantity: 1, price: 110000, image: 'https://3km3cceozg.ucarecd.net/9f4cdacc-cb08-4d36-b675-841dbc65f346/-/preview/1000x1000/' },
-      ]
+  const fetchOrders = useCallback(async () => {
+    setLoading(true);
+    const res = await getOrders();
+    if (res.success) {
+      setData(res.data.map((o) => ({ ...o, key: o.id })));
+    } else {
+      message.error(res.message || 'حدث خطأ أثناء جلب الطلبات');
     }
-  ];
+    setLoading(false);
+  }, []);
 
-  const showOrderDetails = (order) => {
-    setSelectedOrder(order);
-    setIsModalOpen(true);
-  };
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
-  const handleCancel = () => {
-    setIsModalOpen(false);
-  };
-
-  const getStatusTag = (status) => {
-    switch (status) {
-      case 'PENDING':
-        return <Tag icon={<ClockCircleOutlined />} color="warning">قيد الانتظار</Tag>;
-      case 'COMPLETED':
-        return <Tag icon={<CheckCircleOutlined />} color="success">مكتمل</Tag>;
-      case 'CANCELLED':
-        return <Tag icon={<CloseCircleOutlined />} color="error">ملغي</Tag>;
-      default:
-        return <Tag>{status}</Tag>;
+  const handleStatusChange = async (id, status) => {
+    setStatusUpdating(id);
+    const res = await updateOrderStatus(id, status);
+    if (res.success) {
+      message.success(res.message);
+      setData((prev) => prev.map((o) => o.id === id ? { ...o, status } : o));
+    } else {
+      message.error(res.message);
     }
+    setStatusUpdating(null);
   };
 
   const columns = [
@@ -109,12 +90,16 @@ const OrdersPage = () => {
     },
     {
       title: 'الزبون',
-      dataIndex: 'customerName',
-      key: 'customerName',
-      render: (name) => (
+      dataIndex: 'name',
+      key: 'name',
+      render: (name, record) => (
         <Space>
           <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#f0f2f5', color: '#595959' }} />
-          <Text strong>{name}</Text>
+          <div>
+            <Text strong>{name}</Text>
+            <br />
+            <Text type="secondary" style={{ fontSize: 12 }}>{record.phoneNumber}</Text>
+          </div>
         </Space>
       ),
     },
@@ -122,30 +107,49 @@ const OrdersPage = () => {
       title: 'التاريخ',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (date) => <Text type="secondary">{date}</Text>,
+      render: (date) => (
+        <Text type="secondary">
+          {new Date(date).toLocaleDateString('ar-IQ', {
+            year: 'numeric', month: 'short', day: 'numeric',
+          })}
+        </Text>
+      ),
     },
     {
       title: 'المبلغ الإجمالي',
       dataIndex: 'totalPrice',
       key: 'totalPrice',
-      render: (total) => <Text strong style={{ color: '#01caa8' }}>{total.toLocaleString()} د.ع</Text>,
+      render: (total) => (
+        <Text strong style={{ color: '#01caa8' }}>
+          {Number(total).toLocaleString()} د.ع
+        </Text>
+      ),
     },
     {
       title: 'الحالة',
       dataIndex: 'status',
       key: 'status',
-      render: (status) => getStatusTag(status),
+      render: (status, record) => (
+        <Select
+          value={status}
+          size="small"
+          style={{ minWidth: 140 }}
+          loading={statusUpdating === record.id}
+          onChange={(val) => handleStatusChange(record.id, val)}
+          options={statusOptions.map(({ value, label }) => ({ value, label }))}
+        />
+      ),
     },
     {
       title: 'الإجراءات',
       key: 'action',
-      render: (record) => (
+      render: (_, record) => (
         <Space>
           <Tooltip title="عرض التفاصيل">
-            <Button 
-              type="primary" 
-              ghost 
-              icon={<EyeOutlined />} 
+            <Button
+              type="primary"
+              ghost
+              icon={<EyeOutlined />}
               onClick={() => router.push(`/dashboard/ordders/${record.id}`)}
               style={{ borderRadius: 8 }}
             >
@@ -153,7 +157,11 @@ const OrdersPage = () => {
             </Button>
           </Tooltip>
           <Tooltip title="طباعة وصل">
-            <Button type="text" icon={<PrinterOutlined />} />
+            <Button
+              type="text"
+              icon={<PrinterOutlined />}
+              onClick={() => router.push(`/dashboard/ordders/${record.id}?print=1`)}
+            />
           </Tooltip>
         </Space>
       ),
@@ -163,124 +171,29 @@ const OrdersPage = () => {
   return (
     <div style={{ direction: 'rtl' }}>
       <Row gutter={[24, 24]} align="middle" style={{ marginBottom: 24 }}>
-        <Col span={24}>
+        <Col span={18}>
           <Title level={2} style={{ margin: 0 }}>الطلبات</Title>
           <Text type="secondary">متابعة طلبات الزبائن وتغيير حالات التوصيل</Text>
+        </Col>
+        <Col span={6} style={{ textAlign: 'left' }}>
+          <Tooltip title="تحديث">
+            <Button icon={<ReloadOutlined />} onClick={fetchOrders} loading={loading} />
+          </Tooltip>
         </Col>
       </Row>
 
       <Card bordered={false} style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-        <Table 
-          columns={columns} 
-          dataSource={mockOrders} 
-          pagination={{ pageSize: 10 }}
-        />
+        <Spin spinning={loading}>
+          <Table
+            columns={columns}
+            dataSource={data}
+            pagination={{ pageSize: 10 }}
+            locale={{ emptyText: 'لا يوجد طلبات حتى الآن' }}
+          />
+        </Spin>
       </Card>
 
-      {/* Order Details Modal */}
-      <Modal
-        title={
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 32 }}>
-            <Title level={4} style={{ margin: 0 }}>تفاصيل الطلب #{selectedOrder?.id}</Title>
-            {selectedOrder && getStatusTag(selectedOrder.status)}
-          </div>
-        }
-        open={isModalOpen}
-        onCancel={handleCancel}
-        footer={[
-          <Button key="print" icon={<PrinterOutlined />} onClick={() => window.print()}>طباعة الوصل</Button>,
-          <Button key="close" type="primary" onClick={handleCancel} style={{ borderRadius: 8 }}>إغلاق</Button>,
-        ]}
-        width={750}
-        centered
-      >
-        {selectedOrder && (
-          <div style={{ marginTop: 24 }}>
-            <Row gutter={[24, 24]}>
-              <Col span={24}>
-                <Descriptions title="معلومات الزبون" bordered size="small" column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}>
-                  <Descriptions.Item label={<Space><UserOutlined /> الاسم</Space>}>{selectedOrder.customerName}</Descriptions.Item>
-                  <Descriptions.Item label={<Space><PhoneOutlined /> رقم الهاتف</Space>}>{selectedOrder.phone}</Descriptions.Item>
-                  <Descriptions.Item label={<Space><EnvironmentOutlined /> العنوان</Space>} span={2}>{selectedOrder.address}</Descriptions.Item>
-                  <Descriptions.Item label="تاريخ الطلب">{selectedOrder.createdAt}</Descriptions.Item>
-                </Descriptions>
-              </Col>
-            </Row>
-
-            <Divider orientation="right">المنتجات المطلوبة</Divider>
-
-            <Table 
-              dataSource={selectedOrder.items} 
-              pagination={false}
-              size="small"
-              rowKey="id"
-              columns={[
-                {
-                  title: 'المنتج',
-                  dataIndex: 'name',
-                  key: 'name',
-                  render: (text, record) => (
-                    <Space>
-                      <Avatar src={record.image} shape="square" size={40} />
-                      <div>
-                        <Text strong style={{ fontSize: 12 }}>{text}</Text>
-                        <br />
-                        <Text type="secondary" style={{ fontSize: 10 }}>{record.flavor} - {record.size}</Text>
-                      </div>
-                    </Space>
-                  )
-                },
-                {
-                  title: 'الكمية',
-                  dataIndex: 'quantity',
-                  key: 'quantity',
-                  align: 'center',
-                  render: (q) => <Text strong>{q}</Text>
-                },
-                {
-                  title: 'السعر',
-                  dataIndex: 'price',
-                  key: 'price',
-                  align: 'left',
-                  render: (p) => <Text>{p.toLocaleString()} د.ع</Text>
-                },
-                {
-                  title: 'المجموع',
-                  key: 'total',
-                  align: 'left',
-                  render: (_, record) => <Text strong>{(record.price * record.quantity).toLocaleString()} د.ع</Text>
-                }
-              ]}
-            />
-
-            <div style={{ marginTop: 24, textAlign: 'left', background: '#fafafa', padding: '16px 24px', borderRadius: 12 }}>
-              <Row justify="end" gutter={[0, 8]}>
-                <Col span={12}><Text type="secondary">المجموع الفرعي:</Text></Col>
-                <Col span={6} style={{ textAlign: 'left' }}><Text strong>{selectedOrder.totalPrice.toLocaleString()} د.ع</Text></Col>
-                
-                <Col span={12}><Text type="secondary">أجور التوصيل:</Text></Col>
-                <Col span={6} style={{ textAlign: 'left' }}><Text strong>5,000 د.ع</Text></Col>
-                
-                <Col span={24}><Divider style={{ margin: '8px 0' }} /></Col>
-                
-                <Col span={12}><Text strong style={{ fontSize: 18 }}>المجموع النهائي:</Text></Col>
-                <Col span={6} style={{ textAlign: 'left' }}>
-                  <Text strong style={{ fontSize: 20, color: '#01caa8' }}>{(selectedOrder.totalPrice + 5000).toLocaleString()} د.ع</Text>
-                </Col>
-              </Row>
-            </div>
-          </div>
-        )}
-      </Modal>
-
       <style jsx global>{`
-        .ant-modal-title {
-          direction: rtl;
-        }
-        .ant-descriptions-title {
-          font-size: 14px !important;
-          color: #8c8c8c !important;
-        }
         .ant-table-thead > tr > th {
           background: #fafafa !important;
           font-size: 12px !important;

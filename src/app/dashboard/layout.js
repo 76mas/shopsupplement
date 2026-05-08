@@ -28,6 +28,7 @@ import {
 } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { logoutAdmin } from './login/action';
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -264,6 +265,13 @@ export default function DashboardLayout({ children }) {
               
               <Dropdown
                 menu={{
+                  onClick: async (e) => {
+                    if (e.key === 'logout') {
+                      await logoutAdmin();
+                      router.push('/dashboard/login');
+                      router.refresh();
+                    }
+                  },
                   items: [
                     // { key: 'profile', label: 'الملف الشخصي', icon: <UserOutlined /> },
                     { key: 'settings', label: 'إعدادات الحساب', icon: <SettingOutlined /> },
@@ -274,6 +282,7 @@ export default function DashboardLayout({ children }) {
                 placement="bottomLeft"
                 arrow
               >
+
                 <Space style={{ 
                   cursor: 'pointer', 
                   padding: '4px 12px', 

@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Table,
   Button,
@@ -15,6 +15,8 @@ import {
   Tooltip,
   Tag,
   Avatar,
+  Popconfirm,
+  Spin,
 } from 'antd';
 import {
   PlusOutlined,
@@ -23,82 +25,171 @@ import {
   LockOutlined,
   UserOutlined,
   PhoneOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons';
+import {
+  getAdmins,
+  createAdmin,
+  updateAdmin,
+  changeAdminPassword,
+  deleteAdmin,
+} from './action';
 
 const { Title, Text } = Typography;
 
 const AdminsPage = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [form] = Form.useForm();
-  
-  // Mock Data for Admins
-  const [data, setData] = useState([
-    {
-      key: '1',
-      name: 'احمد',
-      id: 1,
-      phoneNumber: '07701234567',
-      createdAt: '2024-05-01',
-    },
-    {
-      key: '2',
-      name: 'ياسين',
-      id: 2,
-      phoneNumber: '07812345678',
-      createdAt: '2024-05-05',
-    },
-  ]);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const showModal = () => {
-    setIsModalOpen(true);
+  // ── Add Modal ──
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [addLoading, setAddLoading] = useState(false);
+  const [addForm] = Form.useForm();
+
+  // ── Edit Modal ──
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editForm] = Form.useForm();
+  const [editingAdmin, setEditingAdmin] = useState(null);
+  const editingAdminRef = useRef(null); // ref لتجنب stale closure
+
+  // ── Change Password Modal ──
+  const [pwModalOpen, setPwModalOpen] = useState(false);
+  const [pwLoading, setPwLoading] = useState(false);
+  const [pwForm] = Form.useForm();
+  const [pwAdminId, setPwAdminId] = useState(null);
+
+  // ─── جلب البيانات ───────────────────────────
+  const fetchAdmins = useCallback(async () => {
+    setLoading(true);
+    const res = await getAdmins();
+    if (res.success) {
+      setData(res.data.map((a) => ({ ...a, key: a.id })));
+    } else {
+      message.error(res.message || 'حدث خطأ أثناء جلب المدراء');
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchAdmins();
+  }, [fetchAdmins]);
+
+  // ─── إضافة مدير ─────────────────────────────
+  const handleAddFinish = async (values) => {
+    setAddLoading(true);
+    const res = await createAdmin(values);
+    if (res.success) {
+      message.success(res.message);
+      setAddModalOpen(false);
+      addForm.resetFields();
+      fetchAdmins();
+    } else {
+      message.error(res.message);
+    }
+    setAddLoading(false);
   };
 
-  const handleCancel = () => {
-    setIsModalOpen(false);
-    form.resetFields();
+  // ─── تعديل مدير ─────────────────────────────
+  const openEditModal = (admin) => {
+    editingAdminRef.current = admin; // حفظ فوري بدون انتظار re-render
+    setEditingAdmin(admin);
+    editForm.setFieldsValue({ name: admin.name, phoneNumber: admin.phoneNumber });
+    setEditModalOpen(true);
   };
 
-  const onFinish = (values) => {
-    console.log('Admin Values:', values);
-    message.success('تمت إضافة المدير بنجاح (بيانات وهمية)');
-    setIsModalOpen(false);
-    form.resetFields();
+  const handleEditFinish = async (values) => {
+    const target = editingAdminRef.current;
+    if (!target?.id) {
+      message.error('حدث خطأ: لم يتم تحديد المدير');
+      return;
+    }
+    setEditLoading(true);
+    const res = await updateAdmin(target.id, values);
+    if (res.success) {
+      message.success(res.message);
+      setEditModalOpen(false);
+      editForm.resetFields();
+      fetchAdmins();
+    } else {
+      message.error(res.message);
+    }
+    setEditLoading(false);
   };
 
+  // ─── تغيير كلمة المرور ───────────────────────
+  const pwAdminIdRef = useRef(null); // ref لتجنب stale closure
+  const openPwModal = (adminId) => {
+    pwAdminIdRef.current = adminId;
+    setPwAdminId(adminId);
+    setPwModalOpen(true);
+  };
+
+  const handlePwFinish = async (values) => {
+    if (values.newPassword !== values.confirmPassword) {
+      message.error('كلمتا المرور غير متطابقتين');
+      return;
+    }
+    const targetId = pwAdminIdRef.current;
+    if (!targetId) {
+      message.error('حدث خطأ: لم يتم تحديد المدير');
+      return;
+    }
+    setPwLoading(true);
+    const res = await changeAdminPassword(targetId, values.newPassword);
+    if (res.success) {
+      message.success(res.message);
+      setPwModalOpen(false);
+      pwForm.resetFields();
+    } else {
+      message.error(res.message);
+    }
+    setPwLoading(false);
+  };
+
+  // ─── حذف مدير ───────────────────────────────
+  const handleDelete = async (id) => {
+    const res = await deleteAdmin(id);
+    if (res.success) {
+      message.success(res.message);
+      fetchAdmins();
+    } else {
+      message.error(res.message);
+    }
+  };
+
+  // ─── الأعمدة ─────────────────────────────────
   const columns = [
     {
       title: 'الاسم',
       dataIndex: 'name',
       key: 'name',
-        render: (text) => (
-        <Space>
-          <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#e6fffb', color: '#01caa8' }} />
-          <div>
-            <Text strong>{text}</Text>
-            <br />
-            {/* <Text type="secondary" style={{ fontSize: 12 }}>رتبة: مدير نظام</Text> */}
-          </div>
-        </Space>)
-    },
-    {
-      title: 'المدير',
-      dataIndex: 'phoneNumber',
-      key: 'phoneNumber',
       render: (text) => (
         <Space>
-          <div>
-            <Text strong>{text}</Text>
-            <br />
-            {/* <Text type="secondary" style={{ fontSize: 12 }}>رتبة: مدير نظام</Text> */}
-          </div>
+          <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#e6fffb', color: '#01caa8' }} />
+          <Text strong>{text}</Text>
         </Space>
       ),
+    },
+    {
+      title: 'رقم الهاتف',
+      dataIndex: 'phoneNumber',
+      key: 'phoneNumber',
+      render: (text) => <Text>{text}</Text>,
     },
     {
       title: 'تاريخ الإضافة',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (date) => <Text type="secondary">{date}</Text>,
+      render: (date) => (
+        <Text type="secondary">
+          {new Date(date).toLocaleDateString('ar-IQ', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+          })}
+        </Text>
+      ),
     },
     {
       title: 'الحالة',
@@ -108,16 +199,32 @@ const AdminsPage = () => {
     {
       title: 'الإجراءات',
       key: 'action',
-      render: () => (
+      render: (_, record) => (
         <Space>
           <Tooltip title="تعديل">
-            <Button type="text" icon={<EditOutlined style={{ color: '#1677ff' }} />} />
+            <Button
+              type="text"
+              icon={<EditOutlined style={{ color: '#1677ff' }} />}
+              onClick={() => openEditModal(record)}
+            />
           </Tooltip>
           <Tooltip title="تغيير كلمة المرور">
-            <Button type="text" icon={<LockOutlined style={{ color: '#faad14' }} />} />
+            <Button
+              type="text"
+              icon={<LockOutlined style={{ color: '#faad14' }} />}
+              onClick={() => openPwModal(record.id)}
+            />
           </Tooltip>
           <Tooltip title="حذف">
-            <Button type="text" icon={<DeleteOutlined style={{ color: '#ff4d4f' }} />} />
+            <Popconfirm
+              title="هل أنت متأكد من حذف هذا المدير؟"
+              okText="نعم، احذف"
+              cancelText="إلغاء"
+              okButtonProps={{ danger: true }}
+              onConfirm={() => handleDelete(record.id)}
+            >
+              <Button type="text" icon={<DeleteOutlined style={{ color: '#ff4d4f' }} />} />
+            </Popconfirm>
           </Tooltip>
         </Space>
       ),
@@ -132,50 +239,62 @@ const AdminsPage = () => {
           <Text type="secondary">إدارة حسابات المسؤولين عن لوحة التحكم</Text>
         </Col>
         <Col span={12} style={{ textAlign: 'left' }}>
-          <Button 
-            type="primary" 
-            icon={<PlusOutlined />} 
-            size="large" 
-            onClick={showModal}
-            style={{ borderRadius: 10, height: 45, padding: '0 24px' }}
-          >
-            إضافة مدير جديد
-          </Button>
+          <Space>
+            <Tooltip title="تحديث">
+              <Button icon={<ReloadOutlined />} onClick={fetchAdmins} loading={loading} />
+            </Tooltip>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              size="large"
+              onClick={() => setAddModalOpen(true)}
+              style={{ borderRadius: 10, height: 45, padding: '0 24px' }}
+            >
+              إضافة مدير جديد
+            </Button>
+          </Space>
         </Col>
       </Row>
 
-      <Card bordered={false} style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-        <Table 
-          columns={columns} 
-          dataSource={data} 
-          pagination={{ pageSize: 10 }}
-        />
+      <Card bordered={false} style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+        <Spin spinning={loading}>
+          <Table
+            columns={columns}
+            dataSource={data}
+            pagination={{ pageSize: 10 }}
+            locale={{ emptyText: 'لا يوجد مدراء حتى الآن' }}
+          />
+        </Spin>
       </Card>
 
-      {/* Add Admin Modal */}
+      {/* ── Modal: إضافة مدير ── */}
       <Modal
         title={<Title level={4}>إضافة مدير جديد</Title>}
-        open={isModalOpen}
-        onCancel={handleCancel}
-        onOk={() => form.submit()}
+        open={addModalOpen}
+        onCancel={() => { setAddModalOpen(false); addForm.resetFields(); }}
+        onOk={() => addForm.submit()}
         okText="حفظ الحساب"
         cancelText="إلغاء"
         centered
+        confirmLoading={addLoading}
         okButtonProps={{ style: { borderRadius: 8, height: 40 } }}
         cancelButtonProps={{ style: { borderRadius: 8, height: 40 } }}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={onFinish}
-          style={{ marginTop: 24 }}
-        >
+        <Form form={addForm} layout="vertical" onFinish={handleAddFinish} style={{ marginTop: 24 }}>
+          <Form.Item
+            name="name"
+            label="الاسم"
+            rules={[{ required: true, message: 'يرجى إدخال الاسم' }]}
+          >
+            <Input prefix={<UserOutlined />} placeholder="اسم المدير" size="large" />
+          </Form.Item>
+
           <Form.Item
             name="phoneNumber"
             label="رقم الهاتف"
             rules={[
               { required: true, message: 'يرجى إدخال رقم الهاتف' },
-              { pattern: /^[0-9]{11}$/, message: 'يرجى إدخال رقم هاتف عراقي صحيح (11 رقم)' }
+              { pattern: /^[0-9]{11}$/, message: 'يرجى إدخال رقم هاتف عراقي صحيح (11 رقم)' },
             ]}
           >
             <Input prefix={<PhoneOutlined />} placeholder="077XXXXXXXX" size="large" />
@@ -184,11 +303,14 @@ const AdminsPage = () => {
           <Form.Item
             name="password"
             label="كلمة المرور"
-            rules={[{ required: true, message: 'يرجى إدخال كلمة المرور' }]}
+            rules={[
+              { required: true, message: 'يرجى إدخال كلمة المرور' },
+              { min: 6, message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' },
+            ]}
           >
             <Input.Password prefix={<LockOutlined />} placeholder="كلمة المرور" size="large" />
           </Form.Item>
-          
+
           <div style={{ background: '#fff7e6', padding: '12px', borderRadius: '8px', border: '1px solid #ffe58f' }}>
             <Text type="warning" style={{ fontSize: 12 }}>
               * ملاحظة: سيتمكن صاحب هذا الرقم من الدخول إلى لوحة التحكم بالكامل وتعديل كافة البيانات.
@@ -197,17 +319,80 @@ const AdminsPage = () => {
         </Form>
       </Modal>
 
+      {/* ── Modal: تعديل مدير ── */}
+      <Modal
+        title={<Title level={4}>تعديل بيانات المدير</Title>}
+        open={editModalOpen}
+        onCancel={() => { setEditModalOpen(false); editForm.resetFields(); }}
+        onOk={() => editForm.submit()}
+        okText="حفظ التعديلات"
+        cancelText="إلغاء"
+        centered
+        confirmLoading={editLoading}
+        okButtonProps={{ style: { borderRadius: 8, height: 40 } }}
+        cancelButtonProps={{ style: { borderRadius: 8, height: 40 } }}
+      >
+        <Form form={editForm} layout="vertical" onFinish={handleEditFinish} style={{ marginTop: 24 }}>
+          <Form.Item
+            name="name"
+            label="الاسم"
+            rules={[{ required: true, message: 'يرجى إدخال الاسم' }]}
+          >
+            <Input prefix={<UserOutlined />} placeholder="اسم المدير" size="large" />
+          </Form.Item>
+
+          <Form.Item
+            name="phoneNumber"
+            label="رقم الهاتف"
+            rules={[
+              { required: true, message: 'يرجى إدخال رقم الهاتف' },
+              { pattern: /^[0-9]{11}$/, message: 'يرجى إدخال رقم هاتف عراقي صحيح (11 رقم)' },
+            ]}
+          >
+            <Input prefix={<PhoneOutlined />} placeholder="077XXXXXXXX" size="large" />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* ── Modal: تغيير كلمة المرور ── */}
+      <Modal
+        title={<Title level={4}>تغيير كلمة المرور</Title>}
+        open={pwModalOpen}
+        onCancel={() => { setPwModalOpen(false); pwForm.resetFields(); }}
+        onOk={() => pwForm.submit()}
+        okText="تغيير كلمة المرور"
+        cancelText="إلغاء"
+        centered
+        confirmLoading={pwLoading}
+        okButtonProps={{ style: { borderRadius: 8, height: 40 } }}
+        cancelButtonProps={{ style: { borderRadius: 8, height: 40 } }}
+      >
+        <Form form={pwForm} layout="vertical" onFinish={handlePwFinish} style={{ marginTop: 24 }}>
+          <Form.Item
+            name="newPassword"
+            label="كلمة المرور الجديدة"
+            rules={[
+              { required: true, message: 'يرجى إدخال كلمة المرور الجديدة' },
+              { min: 6, message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' },
+            ]}
+          >
+            <Input.Password prefix={<LockOutlined />} placeholder="كلمة المرور الجديدة" size="large" />
+          </Form.Item>
+
+          <Form.Item
+            name="confirmPassword"
+            label="تأكيد كلمة المرور"
+            rules={[{ required: true, message: 'يرجى تأكيد كلمة المرور' }]}
+          >
+            <Input.Password prefix={<LockOutlined />} placeholder="أعد كتابة كلمة المرور" size="large" />
+          </Form.Item>
+        </Form>
+      </Modal>
+
       <style jsx global>{`
-        .ant-modal-title {
-          direction: rtl;
-        }
-        .ant-form-item-label {
-          padding-bottom: 4px !important;
-        }
-        .ant-form-item-label label {
-          font-weight: 600 !important;
-          font-size: 13px !important;
-        }
+        .ant-modal-title { direction: rtl; }
+        .ant-form-item-label { padding-bottom: 4px !important; }
+        .ant-form-item-label label { font-weight: 600 !important; font-size: 13px !important; }
       `}</style>
     </div>
   );

@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   Row,
@@ -7,238 +7,224 @@ import {
   Typography,
   Select,
   Button,
-  Upload,
   Space,
   message,
   Tag,
   Divider,
-  List,
   Avatar,
+  Spin,
 } from 'antd';
 import {
-  UploadOutlined,
   SaveOutlined,
   ShoppingOutlined,
   AppstoreOutlined,
-  PlusOutlined,
-  PictureOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons';
+import {
+  getBanners,
+  upsertBanner,
+  getProductsForBanner,
+  getCategoriesForBanner,
+} from './action';
 
 const { Title, Text } = Typography;
 
+const bannerMeta = {
+  FIRST: {
+    title: 'المنتجات المضافة حديثاً',
+    description: 'اختر المنتجات التي ستظهر في قسم "المضافة حديثاً" على الصفحة الرئيسية',
+    mode: 'products',
+  },
+  SECOND: {
+    title: 'الأكثر مبيعاً',
+    description: 'اختر المنتجات التي ستظهر في قسم "الأكثر مبيعاً" على الصفحة الرئيسية',
+    mode: 'products',
+  },
+  THIRD: {
+    title: 'بنر الفئات (4 فئات)',
+    description: 'اختر الفئات لتظهر في قسم الفئات المميزة على الصفحة الرئيسية',
+    mode: 'categories',
+  },
+};
+
 const BannersPage = () => {
-  // Mock Products & Categories for selection
-  const allProducts = [
-    { id: 1, name: 'Whey Gold Standard', image: 'https://3km3cceozg.ucarecd.net/b0f4146b-cb83-443a-81aa-0d050ad95cf2/-/preview/1000x1000/' },
-    { id: 2, name: 'C4 Original', image: 'https://3km3cceozg.ucarecd.net/59156cd8-6e11-41ee-89d3-407a86abe03b/-/preview/1000x1000/' },
-    { id: 3, name: 'Creatine Monohydrate', image: 'https://3km3cceozg.ucarecd.net/a744ef8d-4021-4d9e-aeeb-4b848423427a/-/preview/1000x1000/' },
-    { id: 4, name: 'Hydro Whey Protein', image: 'https://3km3cceozg.ucarecd.net/9f4cdacc-cb08-4d36-b675-841dbc65f346/-/preview/1000x1000/' },
-  ];
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(null); // banner type being saved
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
 
-  const allCategories = [
-    { id: 1, name: 'بروتينات' },
-    { id: 2, name: 'أحماض أمينية' },
-    { id: 3, name: 'فيتامينات' },
-    { id: 4, name: 'حوارق دهون' },
-    { id: 5, name: 'طاقة وباور' },
-  ];
+  // Local state for each banner type
+  const [bannerItems, setBannerItems] = useState({ FIRST: [], SECOND: [], THIRD: [] });
 
-  const [banners, setBanners] = useState([
-    {
-      type: 'FIRST',
-      title: 'المنتجات المضافة حديثاً',
-      description: 'اختر المنتجات التي ستظهر في قسم "المضافة حديثاً" على الصفحة الرئيسية',
-      items: [1, 2],
-      image: '',
-    },
-    {
-      type: 'SECOND',
-      title: 'الأكثر مبيعاً',
-      description: 'اختر المنتجات التي ستظهر في قسم "الأكثر مبيعاً" على الصفحة الرئيسية',
-      items: [3, 4],
-      image: '',
-    },
-    {
-      type: 'THIRD',
-      title: 'بنر الفئات (4 فئات)',
-      description: 'اختر 4 فئات لتظهر في قسم الفئات المميزة على الصفحة الرئيسية',
-      items: [1, 2, 3, 4],
-      image: '',
-    },
-  ]);
+  const fetchAll = useCallback(async () => {
+    setLoading(true);
+    const [bannersRes, productsRes, categoriesRes] = await Promise.all([
+      getBanners(),
+      getProductsForBanner(),
+      getCategoriesForBanner(),
+    ]);
 
-  const handleSave = (type) => {
-    message.success(`تم حفظ تعديلات بنر: ${type}`);
+    if (productsRes.success) setProducts(productsRes.data);
+    if (categoriesRes.success) setCategories(categoriesRes.data);
+
+    if (bannersRes.success) {
+      const map = {};
+      bannersRes.data.forEach((b) => {
+        map[b.type] = Array.isArray(b.items) ? b.items : [];
+      });
+      setBannerItems((prev) => ({ ...prev, ...map }));
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  const handleSave = async (type) => {
+    setSaving(type);
+    const res = await upsertBanner({ type, items: bannerItems[type] });
+    if (res.success) {
+      message.success(res.message);
+    } else {
+      message.error(res.message);
+    }
+    setSaving(null);
   };
 
-  const updateBannerItems = (type, newItems) => {
-    setBanners(banners.map(b => b.type === type ? { ...b, items: newItems } : b));
-  };
+  if (loading) return (
+    <div style={{ textAlign: 'center', padding: 80 }}>
+      <Spin size="large" />
+    </div>
+  );
 
   return (
     <div style={{ direction: 'rtl' }}>
       <Row gutter={[24, 24]} align="middle" style={{ marginBottom: 24 }}>
-        <Col span={24}>
+        <Col span={18}>
           <Title level={2} style={{ margin: 0 }}>إدارة البنرات والصفحة الرئيسية</Title>
           <Text type="secondary">التحكم في الأقسام والمنتجات المعروضة في واجهة المتجر</Text>
+        </Col>
+        <Col span={6} style={{ textAlign: 'left' }}>
+          <Button icon={<ReloadOutlined />} onClick={fetchAll} loading={loading}>تحديث</Button>
         </Col>
       </Row>
 
       <Row gutter={[24, 24]}>
-        {banners.map((banner) => (
-          <Col span={24} key={banner.type}>
-            <Card 
-              bordered={false} 
+        {Object.entries(bannerMeta).map(([type, meta]) => (
+          <Col span={24} key={type}>
+            <Card
+              bordered={false}
               style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}
             >
               <Row gutter={24} align="middle">
+                {/* Left: icon + title */}
                 <Col xs={24} md={6}>
                   <div style={{ padding: '0 10px' }}>
-                    <div style={{ 
-                      width: 60, 
-                      height: 60, 
-                      borderRadius: 12, 
-                      background: banner.type === 'THIRD' ? '#e6f7ff' : '#f6ffed', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
-                      marginBottom: 16
+                    <div style={{
+                      width: 60, height: 60, borderRadius: 12,
+                      background: type === 'THIRD' ? '#e6f7ff' : '#f6ffed',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      marginBottom: 16,
                     }}>
-                      {banner.type === 'THIRD' ? 
-                        <AppstoreOutlined style={{ fontSize: 24, color: '#1890ff' }} /> : 
-                        <ShoppingOutlined style={{ fontSize: 24, color: '#52c41a' }} />
+                      {type === 'THIRD'
+                        ? <AppstoreOutlined style={{ fontSize: 24, color: '#1890ff' }} />
+                        : <ShoppingOutlined style={{ fontSize: 24, color: '#52c41a' }} />
                       }
                     </div>
-                    <Title level={4} style={{ margin: 0 }}>{banner.title}</Title>
-                    <Text type="secondary">{banner.description}</Text>
+                    <Title level={4} style={{ margin: 0 }}>{meta.title}</Title>
+                    <Text type="secondary">{meta.description}</Text>
                   </div>
                 </Col>
 
-                <Col xs={24} md={banner.type === 'THIRD' ? 18 : 12}>
-                  <div style={{ marginTop: { xs: 20, md: 0 } }}>
-                    {banner.type === 'THIRD' ? (
-                      <Row gutter={[16, 16]}>
-                        {[0, 1, 2, 3].map((index) => (
-                          <Col span={6} key={index}>
-                            <Card size="small" style={{ borderRadius: 8, background: '#f8fafc' }}>
-                              <Select
-                                style={{ width: '100%', marginBottom: 8 }}
-                                placeholder="اختر الفئة"
-                                value={banner.items[index]?.categoryId}
-                                onChange={(val) => {
-                                  const newItems = [...banner.items];
-                                  newItems[index] = { ...newItems[index], categoryId: val };
-                                  updateBannerItems(banner.type, newItems);
-                                }}
-                              >
-                                {allCategories.map(cat => (
-                                  <Select.Option key={cat.id} value={cat.id}>{cat.name}</Select.Option>
-                                ))}
-                              </Select>
-                              <Upload 
-                                maxCount={1} 
-                                showUploadList={false}
-                                beforeUpload={() => false}
-                              >
-                                <div style={{ 
-                                  width: '100%', 
-                                  height: 80, 
-                                  border: '1px dashed #d9d9d9', 
-                                  borderRadius: 8,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  cursor: 'pointer',
-                                  overflow: 'hidden',
-                                  background: '#fff'
-                                }}>
-                                  {banner.items[index]?.image ? (
-                                    <img src={banner.items[index].image} alt="cat" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                  ) : (
-                                    <div style={{ textAlign: 'center' }}>
-                                      <PlusOutlined />
-                                      <div style={{ fontSize: 10 }}>صورة</div>
-                                    </div>
-                                  )}
-                                </div>
-                              </Upload>
-                            </Card>
-                          </Col>
-                        ))}
-                      </Row>
-                    ) : (
-                      <>
-                        <Text strong style={{ display: 'block', marginBottom: 8 }}>
-                          اختيار المنتجات المرتبطة:
-                        </Text>
-                        <Select
-                          mode="multiple"
-                          style={{ width: '100%' }}
-                          placeholder="اختر المنتجات"
-                          value={banner.items}
-                          onChange={(val) => updateBannerItems(banner.type, val)}
-                          size="large"
-                        >
-                          {allProducts.map(prod => (
-                            <Select.Option key={prod.id} value={prod.id}>
-                              <Space>
-                                <Avatar src={prod.image} size="small" />
-                                {prod.name}
-                              </Space>
-                            </Select.Option>
-                          ))}
-                        </Select>
-                      </>
-                    )}
-                  </div>
-                </Col>
-
-                <Col xs={24} md={banner.type === 'THIRD' ? 24 : 6}>
-                  <div style={{ marginTop: banner.type === 'THIRD' ? 24 : 0, textAlign: banner.type === 'THIRD' ? 'left' : 'right' }}>
-                    <Space direction={banner.type === 'THIRD' ? "horizontal" : "vertical"} style={{ width: '100%', justifyContent: banner.type === 'THIRD' ? 'flex-end' : 'flex-start' }}>
-                      {banner.type !== 'THIRD' && (
-                        <Upload maxCount={1} listType="picture">
-                          <Button icon={<PictureOutlined />} block>تغيير صورة القسم</Button>
-                        </Upload>
-                      )}
-                      <Button 
-                        type="primary" 
-                        icon={<SaveOutlined />} 
-                        size="large" 
-                        onClick={() => handleSave(banner.title)}
-                        style={{ borderRadius: 8, minWidth: 150 }}
-                      >
-                        حفظ التغييرات
-                      </Button>
-                    </Space>
-                  </div>
-                </Col>
-              </Row>
-
-              {banner.type !== 'THIRD' && (
-                <>
-                  <Divider style={{ margin: '24px 0 12px 0' }} />
-                  <div>
-                    <Text type="secondary" style={{ fontSize: 12 }}>العناصر المختارة حالياً:</Text>
-                    <div style={{ marginTop: 8 }}>
+                {/* Middle: selector */}
+                <Col xs={24} md={14}>
+                  {meta.mode === 'products' ? (
+                    <>
+                      <Text strong style={{ display: 'block', marginBottom: 8 }}>
+                        اختيار المنتجات المرتبطة:
+                      </Text>
+                      <Select
+                        mode="multiple"
+                        style={{ width: '100%' }}
+                        placeholder="اختر المنتجات"
+                        value={bannerItems[type]}
+                        onChange={(val) => setBannerItems((prev) => ({ ...prev, [type]: val }))}
+                        size="large"
+                        optionFilterProp="label"
+                        options={products.map((p) => ({
+                          value: p.id,
+                          label: (
+                            <Space>
+                              <Avatar
+                                src={p.productImages?.[0]?.image}
+                                size="small"
+                                shape="square"
+                              />
+                              {p.name}
+                            </Space>
+                          ),
+                        }))}
+                      />
+                      <Divider style={{ margin: '12px 0 8px 0' }} />
                       <Space wrap>
-                        {banner.items.map(itemId => {
-                          const item = allProducts.find(p => p.id === itemId);
-                          return item ? (
-                            <Tag 
-                              key={itemId} 
-                              color="green"
-                              style={{ borderRadius: 6, padding: '4px 12px' }}
-                            >
-                              {item.name}
+                        {bannerItems[type].map((id) => {
+                          const prod = products.find((p) => p.id === id);
+                          return prod ? (
+                            <Tag key={id} color="green" style={{ borderRadius: 6, padding: '4px 12px' }}>
+                              {prod.name}
                             </Tag>
                           ) : null;
                         })}
                       </Space>
-                    </div>
-                  </div>
-                </>
-              )}
+                    </>
+                  ) : (
+                    <>
+                      <Text strong style={{ display: 'block', marginBottom: 8 }}>
+                        اختيار الفئات المرتبطة:
+                      </Text>
+                      <Select
+                        mode="multiple"
+                        style={{ width: '100%' }}
+                        placeholder="اختر الفئات (4 كحد أقصى)"
+                        value={bannerItems[type]}
+                        onChange={(val) => {
+                          if (val.length > 4) {
+                            message.warning('يمكن اختيار 4 فئات كحد أقصى');
+                            return;
+                          }
+                          setBannerItems((prev) => ({ ...prev, [type]: val }));
+                        }}
+                        size="large"
+                        options={categories.map((c) => ({ value: c.id, label: c.name }))}
+                      />
+                      <Divider style={{ margin: '12px 0 8px 0' }} />
+                      <Space wrap>
+                        {bannerItems[type].map((id) => {
+                          const cat = categories.find((c) => c.id === id);
+                          return cat ? (
+                            <Tag key={id} color="blue" style={{ borderRadius: 6, padding: '4px 12px' }}>
+                              {cat.name}
+                            </Tag>
+                          ) : null;
+                        })}
+                      </Space>
+                    </>
+                  )}
+                </Col>
+
+                {/* Right: save button */}
+                <Col xs={24} md={4} style={{ textAlign: 'left' }}>
+                  <Button
+                    type="primary"
+                    icon={<SaveOutlined />}
+                    size="large"
+                    loading={saving === type}
+                    onClick={() => handleSave(type)}
+                    style={{ borderRadius: 8, minWidth: 140 }}
+                  >
+                    حفظ التغييرات
+                  </Button>
+                </Col>
+              </Row>
             </Card>
           </Col>
         ))}
