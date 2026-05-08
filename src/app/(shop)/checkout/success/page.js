@@ -88,7 +88,7 @@ function SuccessContent() {
 
 export default function SuccessPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]" dir="rtl"><Container><div className="text-center font-black text-xl">جاري التحميل...</div></Container></div>}>
       <SuccessContent />
     </Suspense>
   );
