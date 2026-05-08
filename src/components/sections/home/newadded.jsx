@@ -135,7 +135,8 @@ const products = [
   }
 ];
 
-const NewAdded = () => {
+const NewAdded = ({ fetchedProducts = [] }) => {
+  const displayProducts = fetchedProducts.length > 0 ? fetchedProducts : products;
   const router = useRouter();
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -220,7 +221,7 @@ const NewAdded = () => {
           ref={emblaRef}
         >
           <div className="flex gap-6 md:gap-8">
-            {products.map((product) => (
+            {displayProducts.map((product) => (
               <div
                 key={product.id}
                 onClick={() => handleProductClick(product)}
