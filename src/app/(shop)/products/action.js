@@ -24,12 +24,19 @@ export async function getShopProducts({
   minPrice,
   maxPrice,
   page = 1,
+  search,
 } = {}) {
   try {
     const where = {
       deleteAt: null,
       // isAvailable لا نفلتر حسبه — نعرض الكل لكن مع شريط "غير متوفر" في الفرونت
       ...(categoryId && { categoryId: Number(categoryId) }),
+      ...(search && {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } },
+        ],
+      }),
       ...(minPrice != null || maxPrice != null
         ? {
             endPrice: {

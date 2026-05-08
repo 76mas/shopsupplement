@@ -34,6 +34,7 @@ const ProductsContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const searchQuery = searchParams.get("q") || "";
 
   // ── Filter state (controlled) ──────────────────────────
   const [minPrice, setMinPrice] = useState(0);
@@ -64,6 +65,7 @@ const ProductsContent = () => {
       minPrice: opts.minPrice ?? (minPrice > 0 ? minPrice : undefined),
       maxPrice: opts.maxPrice ?? (maxPrice < 200000 ? maxPrice : undefined),
       page: opts.page ?? page,
+      search: searchQuery || undefined,
     });
     if (res.success) {
       setProducts(res.data);
@@ -71,9 +73,9 @@ const ProductsContent = () => {
       setTotalPages(res.totalPages);
     }
     setLoading(false);
-  }, [selectedCategory, minPrice, maxPrice, page]);
+  }, [selectedCategory, minPrice, maxPrice, page, searchQuery]);
 
-  useEffect(() => { fetchProducts(); }, []);
+  useEffect(() => { fetchProducts(); }, [searchQuery, fetchProducts]);
 
   // ── Apply filter ─────────────────────────────────────────
   const applyFilter = () => {
@@ -167,7 +169,9 @@ const ProductsContent = () => {
           <div className="flex flex-col flex-1">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-3xl font-black">
-                {selectedCategory ? "الفئة المختارة" : "الكل"}
+                {searchQuery 
+                  ? `نتائج البحث عن: "${searchQuery}"` 
+                  : (selectedCategory ? "الفئة المختارة" : "الكل")}
               </h2>
               <div className="flex items-center gap-4">
                 <p className="hidden md:block text-[#999] text-sm">
@@ -303,7 +307,11 @@ const ProductsContent = () => {
             {!loading && products.length === 0 && (
               <div className="py-24 text-center flex flex-col items-center gap-4 text-gray-400">
                 <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
-                <p className="font-bold text-lg">لا توجد منتجات تطابق الفلتر</p>
+                <p className="font-bold text-lg">
+                  {searchQuery 
+                    ? `لا توجد منتجات تطابق البحث: "${searchQuery}"` 
+                    : "لا توجد منتجات تطابق الفلتر"}
+                </p>
                 <button onClick={() => { setSelectedCategory(null); setMinPrice(0); setMaxPrice(200000); fetchProducts({ categoryId: null, minPrice: undefined, maxPrice: undefined, page: 1 }); }} className="text-black underline font-bold text-sm">
                   إعادة تعيين الفلتر
                 </button>
