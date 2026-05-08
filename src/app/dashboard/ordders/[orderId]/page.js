@@ -29,6 +29,15 @@ const OrderDetailsPage = () => {
   const [saving,   setSaving]   = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editData,  setEditData]  = useState({ name: '', phoneNumber: '', address: '' });
+  const [isMobile,  setIsMobile]  = useState(false);
+
+  // Handle responsiveness
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // ── Add-item modal ────────────────────────────────────
   const [addModalOpen, setAddModalOpen] = useState(false);
@@ -196,7 +205,8 @@ const OrderDetailsPage = () => {
     <div style={{ direction: 'rtl', paddingBottom: 50 }}>
 
       {/* ── Header ──────────────────────────────────── */}
-      <Row gutter={[24, 24]} align="middle" style={{ marginBottom: 24 }} className="no-print">
+      {/* ── Header ──────────────────────────────────── */}
+      <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 24 }} className="no-print">
         <Col span={24}>
           <Breadcrumb
             items={[
@@ -206,10 +216,10 @@ const OrderDetailsPage = () => {
             ]}
             style={{ marginBottom: 16 }}
           />
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Space size={16}>
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: 16 }}>
+            <Space size={16} wrap>
               <Button icon={<ArrowRightOutlined />} onClick={() => router.back()} style={{ borderRadius: 10 }} />
-              <Title level={2} style={{ margin: 0 }}>تفاصيل الطلب #{orderId}</Title>
+              <Title level={isMobile ? 3 : 2} style={{ margin: 0 }}>تفاصيل الطلب #{orderId}</Title>
               <Tag
                 color={order.status === 'COMPLETED' ? 'green' : order.status === 'CANCELLED' ? 'red' : 'gold'}
                 style={{ fontSize: 14, padding: '4px 12px', borderRadius: 8 }}
@@ -217,7 +227,7 @@ const OrderDetailsPage = () => {
                 {order.status === 'PENDING' ? 'قيد الانتظار' : order.status === 'COMPLETED' ? 'مكتمل' : 'ملغي'}
               </Tag>
             </Space>
-            <Space>
+            <Space wrap style={{ width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
               {!isEditing ? (
                 <Button type="primary" ghost onClick={() => setIsEditing(true)}>تعديل الطلب</Button>
               ) : (
@@ -317,13 +327,73 @@ const OrderDetailsPage = () => {
               </Button>
             }
           >
-            <Table
-              dataSource={order.items}
-              columns={columns}
-              pagination={false}
-              rowKey="id"
-              locale={{ emptyText: 'لا توجد منتجات في هذا الطلب' }}
-            />
+            {isMobile ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {order.items.map((item) => {
+                   const img = item.product?.productImages?.[0]?.image;
+                   return (
+                     <div key={item.id} style={{ 
+                       padding: 16, 
+                       background: '#f8fafc', 
+                       borderRadius: 12,
+                       display: 'flex',
+                       gap: 12,
+                       position: 'relative'
+                     }}>
+                        <Avatar
+                          src={img}
+                          shape="square"
+                          size={64}
+                          style={{ borderRadius: 8, background: '#fff', flexShrink: 0 }}
+                        />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                           <Text strong style={{ display: 'block', fontSize: 14 }}>{item.product?.name ?? '—'}</Text>
+                           <div style={{ marginTop: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div>
+                                <Text type="secondary" style={{ fontSize: 12 }}>الكمية: </Text>
+                                <InputNumber
+                                  min={1}
+                                  value={item.quantity}
+                                  disabled={!isEditing}
+                                  onChange={(val) =>
+                                    setOrder((prev) => ({
+                                      ...prev,
+                                      items: prev.items.map((it) => it.id === item.id ? { ...it, quantity: val } : it),
+                                    }))
+                                  }
+                                  size="small"
+                                  style={{ width: 60 }}
+                                />
+                              </div>
+                              <Text strong style={{ fontSize: 14 }}>{(Number(item.price) * item.quantity).toLocaleString()} د.ع</Text>
+                           </div>
+                        </div>
+                        <Popconfirm
+                          title="حذف المنتج؟"
+                          onConfirm={() => handleRemoveItem(item.id)}
+                          okText="نعم" cancelText="لا"
+                        >
+                          <Button 
+                            type="text" 
+                            danger 
+                            icon={<DeleteOutlined />} 
+                            style={{ position: 'absolute', top: 8, left: 8 }}
+                          />
+                        </Popconfirm>
+                     </div>
+                   );
+                })}
+                {order.items.length === 0 && <Text type="secondary" style={{ textAlign: 'center', padding: 20 }}>لا توجد منتجات</Text>}
+              </div>
+            ) : (
+              <Table
+                dataSource={order.items}
+                columns={columns}
+                pagination={false}
+                rowKey="id"
+                locale={{ emptyText: 'لا توجد منتجات في هذا الطلب' }}
+              />
+            )}
 
             <div style={{ marginTop: 32, padding: 24, background: '#f8fafc', borderRadius: 16 }}>
               <Row justify="end" gutter={[0, 12]}>

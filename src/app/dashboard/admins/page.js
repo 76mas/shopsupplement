@@ -26,6 +26,7 @@ import {
   UserOutlined,
   PhoneOutlined,
   ReloadOutlined,
+  LoadingOutlined,
 } from '@ant-design/icons';
 import {
   getAdmins,
@@ -40,6 +41,14 @@ const { Title, Text } = Typography;
 const AdminsPage = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // ── Add Modal ──
   const [addModalOpen, setAddModalOpen] = useState(false);
@@ -233,13 +242,13 @@ const AdminsPage = () => {
 
   return (
     <div style={{ direction: 'rtl' }}>
-      <Row gutter={[24, 24]} align="middle" style={{ marginBottom: 24 }}>
-        <Col span={12}>
-          <Title level={2} style={{ margin: 0 }}>المدراء</Title>
+      <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 24 }}>
+        <Col xs={24} sm={12}>
+          <Title level={2} style={{ margin: 0, fontSize: '1.5rem' }}>المدراء</Title>
           <Text type="secondary">إدارة حسابات المسؤولين عن لوحة التحكم</Text>
         </Col>
-        <Col span={12} style={{ textAlign: 'left' }}>
-          <Space>
+        <Col xs={24} sm={12} style={{ textAlign: 'left' }}>
+          <Space wrap>
             <Tooltip title="تحديث">
               <Button icon={<ReloadOutlined />} onClick={fetchAdmins} loading={loading} />
             </Tooltip>
@@ -256,16 +265,87 @@ const AdminsPage = () => {
         </Col>
       </Row>
 
-      <Card bordered={false} style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-        <Spin spinning={loading}>
-          <Table
-            columns={columns}
-            dataSource={data}
-            pagination={{ pageSize: 10 }}
-            locale={{ emptyText: 'لا يوجد مدراء حتى الآن' }}
-          />
-        </Spin>
-      </Card>
+      {/* Admins List */}
+      <Spin spinning={loading} indicator={<LoadingOutlined style={{ fontSize: 32 }} spin />}>
+        {isMobile ? (
+          <Row gutter={[16, 16]}>
+            {data.map((r) => (
+              <Col xs={24} key={r.id}>
+                <Card 
+                  variant="borderless" 
+                  style={{ borderRadius: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+                  bodyStyle={{ padding: '16px' }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                    <Space size={12}>
+                      <Avatar icon={<UserOutlined />} size="large" style={{ backgroundColor: '#e6fffb', color: '#01caa8' }} />
+                      <div>
+                        <Text strong style={{ fontSize: 16, display: 'block' }}>{r.name}</Text>
+                        <Text type="secondary" style={{ fontSize: 13 }}>{r.phoneNumber}</Text>
+                      </div>
+                    </Space>
+                    <Tag color="green" style={{ borderRadius: 4 }}>نشط</Tag>
+                  </div>
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fafafa', padding: '8px 12px', borderRadius: 10 }}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {new Date(r.createdAt).toLocaleDateString('ar-IQ', {
+                        year: 'numeric', month: 'short', day: 'numeric',
+                      })}
+                    </Text>
+                    <Space size={4}>
+                      <Tooltip title="تعديل">
+                        <Button 
+                          type="text" 
+                          icon={<EditOutlined style={{ color: '#1677ff' }} />} 
+                          onClick={() => openEditModal(r)}
+                          style={{ background: '#fff', borderRadius: 8, boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+                        />
+                      </Tooltip>
+                      <Tooltip title="كلمة المرور">
+                        <Button 
+                          type="text" 
+                          icon={<LockOutlined style={{ color: '#faad14' }} />} 
+                          onClick={() => openPwModal(r.id)}
+                          style={{ background: '#fff', borderRadius: 8, boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+                        />
+                      </Tooltip>
+                      <Popconfirm
+                        title="حذف المدير"
+                        onConfirm={() => handleDelete(r.id)}
+                        okText="حذف" cancelText="إلغاء"
+                        okButtonProps={{ danger: true }}
+                      >
+                        <Button 
+                          type="text" 
+                          icon={<DeleteOutlined style={{ color: '#ff4d4f' }} />} 
+                          style={{ background: '#fff', borderRadius: 8, boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+                        />
+                      </Popconfirm>
+                    </Space>
+                  </div>
+                </Card>
+              </Col>
+            ))}
+            {data.length === 0 && (
+              <Col span={24}>
+                <Card variant="borderless" style={{ textAlign: 'center', padding: 40, borderRadius: 16 }}>
+                  <Text type="secondary">لا يوجد مدراء حالياً</Text>
+                </Card>
+              </Col>
+            )}
+          </Row>
+        ) : (
+          <Card bordered={false} style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+            <Table
+              columns={columns}
+              dataSource={data}
+              pagination={{ pageSize: 10 }}
+              locale={{ emptyText: 'لا يوجد مدراء حتى الآن' }}
+            />
+          </Card>
+        )}
+      </Spin>
 
       {/* ── Modal: إضافة مدير ── */}
       <Modal

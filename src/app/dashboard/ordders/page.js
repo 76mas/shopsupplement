@@ -23,6 +23,7 @@ import {
   CloseCircleOutlined,
   UserOutlined,
   ReloadOutlined,
+  LoadingOutlined,
 } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { getOrders, updateOrderStatus } from './action';
@@ -53,6 +54,14 @@ const OrdersPage = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [statusUpdating, setStatusUpdating] = useState(null); // id of the row being updated
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -170,28 +179,102 @@ const OrdersPage = () => {
 
   return (
     <div style={{ direction: 'rtl' }}>
-      <Row gutter={[24, 24]} align="middle" style={{ marginBottom: 24 }}>
-        <Col span={18}>
-          <Title level={2} style={{ margin: 0 }}>الطلبات</Title>
+      <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 24 }}>
+        <Col xs={20} sm={18}>
+          <Title level={2} style={{ margin: 0, fontSize: '1.5rem' }}>الطلبات</Title>
           <Text type="secondary">متابعة طلبات الزبائن وتغيير حالات التوصيل</Text>
         </Col>
-        <Col span={6} style={{ textAlign: 'left' }}>
+        <Col xs={4} sm={6} style={{ textAlign: 'left' }}>
           <Tooltip title="تحديث">
             <Button icon={<ReloadOutlined />} onClick={fetchOrders} loading={loading} />
           </Tooltip>
         </Col>
       </Row>
 
-      <Card bordered={false} style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-        <Spin spinning={loading}>
-          <Table
-            columns={columns}
-            dataSource={data}
-            pagination={{ pageSize: 10 }}
-            locale={{ emptyText: 'لا يوجد طلبات حتى الآن' }}
-          />
-        </Spin>
-      </Card>
+      {/* Orders List */}
+      <Spin spinning={loading} indicator={<LoadingOutlined style={{ fontSize: 32 }} spin />}>
+        {isMobile ? (
+          <Row gutter={[16, 16]}>
+            {data.map((r) => (
+              <Col xs={24} key={r.id}>
+                <Card 
+                  variant="borderless" 
+                  style={{ borderRadius: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+                  bodyStyle={{ padding: '16px' }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                    <div>
+                      <Text strong style={{ fontSize: 16, display: 'block' }}>طلب #{r.id}</Text>
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        {new Date(r.createdAt).toLocaleDateString('ar-IQ', {
+                          year: 'numeric', month: 'short', day: 'numeric',
+                        })}
+                      </Text>
+                    </div>
+                    <Text strong style={{ color: '#01caa8', fontSize: 16 }}>
+                      {Number(r.totalPrice).toLocaleString()} د.ع
+                    </Text>
+                  </div>
+
+                  <div style={{ background: '#f8fafc', padding: '10px', borderRadius: 12, marginBottom: 12 }}>
+                    <Space>
+                      <Avatar icon={<UserOutlined />} size="small" style={{ backgroundColor: '#fff', color: '#595959' }} />
+                      <div>
+                        <Text strong style={{ fontSize: 13, display: 'block', lineHeight: 1 }}>{r.name}</Text>
+                        <Text type="secondary" style={{ fontSize: 11 }}>{r.phoneNumber}</Text>
+                      </div>
+                    </Space>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Select
+                      value={r.status}
+                      size="middle"
+                      style={{ width: 130 }}
+                      loading={statusUpdating === r.id}
+                      onChange={(val) => handleStatusChange(r.id, val)}
+                      options={statusOptions.map(({ value, label }) => ({ value, label }))}
+                      className="mobile-status-select"
+                    />
+                    <Space>
+                      <Button 
+                        type="primary" 
+                        ghost 
+                        icon={<EyeOutlined />} 
+                        onClick={() => router.push(`/dashboard/ordders/${r.id}`)}
+                        style={{ borderRadius: 8 }}
+                      >
+                        التفاصيل
+                      </Button>
+                      <Button 
+                        icon={<PrinterOutlined />} 
+                        onClick={() => router.push(`/dashboard/ordders/${r.id}?print=1`)}
+                        style={{ borderRadius: 8 }}
+                      />
+                    </Space>
+                  </div>
+                </Card>
+              </Col>
+            ))}
+            {data.length === 0 && (
+              <Col span={24}>
+                <Card variant="borderless" style={{ textAlign: 'center', padding: 40, borderRadius: 16 }}>
+                  <Text type="secondary">لا توجد طلبات حالياً</Text>
+                </Card>
+              </Col>
+            )}
+          </Row>
+        ) : (
+          <Card bordered={false} style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+            <Table
+              columns={columns}
+              dataSource={data}
+              pagination={{ pageSize: 10 }}
+              locale={{ emptyText: 'لا يوجد طلبات حتى الآن' }}
+            />
+          </Card>
+        )}
+      </Spin>
 
       <style jsx global>{`
         .ant-table-thead > tr > th {

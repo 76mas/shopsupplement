@@ -40,6 +40,14 @@ const CategoriesPage = () => {
   const [editingCategory, setEditingCategory] = useState(null); // null = add mode
   const [isPending, startTransition] = useTransition();
   const [form] = Form.useForm();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // ─── جلب البيانات ───────────────────────────────────────
   const fetchCategories = async () => {
@@ -197,44 +205,95 @@ const CategoriesPage = () => {
   return (
     <div style={{ direction: 'rtl' }}>
       {/* Header */}
-      <Row gutter={[24, 24]} align="middle" style={{ marginBottom: 24 }}>
-        <Col span={12}>
-          <Title level={2} style={{ margin: 0 }}>
+      <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 24 }}>
+        <Col xs={24} sm={12}>
+          <Title level={2} style={{ margin: 0, fontSize: '1.5rem' }}>
             الفئات
           </Title>
           <Text type="secondary">إدارة فئات المنتجات وتنظيمها</Text>
         </Col>
-        <Col span={12} style={{ textAlign: 'left' }}>
+        <Col xs={24} sm={12} style={{ textAlign: 'left' }}>
           <Button
             type="primary"
             icon={<PlusOutlined />}
             size="large"
             onClick={openAdd}
-            style={{ borderRadius: 10, height: 45, padding: '0 24px' }}
+            style={{ borderRadius: 10, height: 45, padding: '0 24px', width: 'auto' }}
+            block={false}
           >
             إضافة فئة جديدة
           </Button>
         </Col>
       </Row>
 
-      {/* Table */}
-      <Card
-        bordered={false}
-        style={{
-          borderRadius: 16,
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
-        }}
-      >
-        <Table
-          columns={columns}
-          dataSource={categories}
-          pagination={{ pageSize: 10 }}
-          loading={{
-            spinning: loading,
-            indicator: <LoadingOutlined style={{ fontSize: 28 }} spin />,
-          }}
-        />
-      </Card>
+      {/* Categories List */}
+      <Spin spinning={loading} indicator={<LoadingOutlined style={{ fontSize: 32 }} spin />}>
+        {isMobile ? (
+          <Row gutter={[16, 16]}>
+            {categories.map((c) => (
+              <Col xs={24} key={c.id}>
+                <Card 
+                  variant="borderless" 
+                  style={{ borderRadius: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+                  bodyStyle={{ padding: '16px' }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Space size={12}>
+                      <div style={{
+                        width: 40, height: 40, borderRadius: 10,
+                        background: '#e6fffb', display: 'flex',
+                        alignItems: 'center', justifyContent: 'center'
+                      }}>
+                        <AppstoreOutlined style={{ color: '#01caa8', fontSize: 20 }} />
+                      </div>
+                      <div>
+                        <Text strong style={{ fontSize: 16, display: 'block' }}>{c.name}</Text>
+                        <Tag color="cyan" style={{ marginTop: 4, borderRadius: 4 }}>{c.productCount} منتج</Tag>
+                      </div>
+                    </Space>
+                    
+                    <Space>
+                      <Button 
+                        type="text" 
+                        icon={<EditOutlined style={{ color: '#1677ff' }} />} 
+                        onClick={() => openEdit(c)}
+                        style={{ background: '#f0f7ff', borderRadius: 8 }}
+                      />
+                      <Popconfirm
+                        title="حذف الفئة"
+                        onConfirm={() => handleDelete(c.id)}
+                        okText="حذف" cancelText="إلغاء"
+                        okButtonProps={{ danger: true }}
+                      >
+                        <Button 
+                          type="text" 
+                          icon={<DeleteOutlined style={{ color: '#ff4d4f' }} />} 
+                          style={{ background: '#fff1f0', borderRadius: 8 }}
+                        />
+                      </Popconfirm>
+                    </Space>
+                  </div>
+                </Card>
+              </Col>
+            ))}
+            {categories.length === 0 && (
+              <Col span={24}>
+                <Card variant="borderless" style={{ textAlign: 'center', padding: 40, borderRadius: 16 }}>
+                  <Text type="secondary">لا توجد فئات حالياً</Text>
+                </Card>
+              </Col>
+            )}
+          </Row>
+        ) : (
+          <Card bordered={false} style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+            <Table
+              columns={columns}
+              dataSource={categories}
+              pagination={{ pageSize: 10 }}
+            />
+          </Card>
+        )}
+      </Spin>
 
       {/* Add / Edit Modal */}
       <Modal

@@ -25,6 +25,7 @@ import {
   MenuUnfoldOutlined,
   BellOutlined,
   GlobalOutlined,
+  MoreOutlined,
 } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -36,12 +37,24 @@ const { Title, Text } = Typography;
 export default function DashboardLayout({ children }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
-  // Prevent hydration mismatch
+  // Handle responsiveness
   useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 992);
+      if (window.innerWidth <= 992) {
+        setCollapsed(true);
+      }
+    };
+    
+    handleResize();
+    window.addEventListener('resize', handleResize);
     setMounted(true);
+    
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   if (!mounted) return null;
@@ -105,6 +118,15 @@ export default function DashboardLayout({ children }) {
     },
   ];
 
+  // For Mobile Bottom Tabs
+  const mobileTabs = [
+    { key: '/dashboard', icon: <DashboardOutlined />, label: 'الرئيسية' },
+    { key: '/dashboard/ordders', icon: <ShoppingCartOutlined />, label: 'الطلبات' },
+    { key: '/dashboard/products', icon: <ShoppingOutlined />, label: 'المنتجات' },
+    { key: '/dashboard/categories', icon: <AppstoreOutlined />, label: 'الفئات' },
+    { key: 'more', icon: <MoreOutlined />, label: 'المزيد' },
+  ];
+
   return (
     <ConfigProvider
       direction="rtl"
@@ -129,92 +151,95 @@ export default function DashboardLayout({ children }) {
       }}
     >
       <Layout style={{ minHeight: '100vh', direction: 'rtl' }}>
-        {/* Sidebar on the Right */}
-        <Sider
-          collapsible
-          collapsed={collapsed}
-          onCollapse={(value) => setCollapsed(value)}
-          trigger={null}
-          theme="light"
-          width={280}
-          reverseArrow
-          style={{
-            overflow: 'auto',
-            height: '100vh',
-            position: 'fixed',
-            right: 0,
-            left: 'auto',
-            zIndex: 100,
-            boxShadow: '0 0 20px rgba(0,0,0,0.05)',
-            borderLeft: '1px solid #f0f0f0',
-          }}
-        >
-          <div style={{ height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-            <div style={{ 
-              width: '100%', 
-              height: 50, 
-              background: 'linear-gradient(135deg, #01caa8 0%, #00b497 100%)', 
-              borderRadius: 12,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.3s',
-              boxShadow: '0 4px 12px rgba(1, 202, 168, 0.2)'
-            }}>
-              {!collapsed ? (
-                <Title level={4} style={{ margin: 0, color: 'white', fontSize: 18 }}>
-                  متجر المكملات
-                </Title>
-              ) : (
-                <Title level={4} style={{ margin: 0, color: 'white' }}>S</Title>
-              )}
-            </div>
-          </div>
-          
-          <div style={{ padding: '0 16px', marginBottom: 16 }}>
-             <Text type="secondary" style={{ fontSize: 12, padding: '0 12px', display: collapsed ? 'none' : 'block' }}>
-               القائمة الرئيسية
-             </Text>
-          </div>
-
-          <Menu
+        {/* Sidebar on the Right - Hidden on Mobile */}
+        {!isMobile && (
+          <Sider
+            collapsible
+            collapsed={collapsed}
+            onCollapse={(value) => setCollapsed(value)}
+            trigger={null}
             theme="light"
-            mode="inline"
-            selectedKeys={[pathname]}
-            items={menuItems}
-            style={{ borderLeft: 0, borderRight: 0 }}
-          />
-          
-          {!collapsed && (
-            <div style={{ 
-              position: 'absolute', 
-              bottom: 24, 
-              left: 24, 
-              right: 24, 
-              padding: 16, 
-              background: '#f8fafc', 
-              borderRadius: 12,
-              textAlign: 'center'
-            }}>
-              <GlobalOutlined style={{ color: '#01caa8', fontSize: 24, marginBottom: 8 }} />
-              <div style={{ fontSize: 12, color: '#64748b' }}>نسخة النظام</div>
-              <div style={{ fontSize: 14, fontWeight: 'bold', color: '#1e293b' }}>v2.4.0</div>
+            width={280}
+            reverseArrow
+            style={{
+              overflow: 'auto',
+              height: '100vh',
+              position: 'fixed',
+              right: 0,
+              left: 'auto',
+              zIndex: 100,
+              boxShadow: '0 0 20px rgba(0,0,0,0.05)',
+              borderLeft: '1px solid #f0f0f0',
+            }}
+          >
+            <div style={{ height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+              <div style={{ 
+                width: '100%', 
+                height: 50, 
+                background: 'linear-gradient(135deg, #01caa8 0%, #00b497 100%)', 
+                borderRadius: 12,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.3s',
+                boxShadow: '0 4px 12px rgba(1, 202, 168, 0.2)'
+              }}>
+                {!collapsed ? (
+                  <Title level={4} style={{ margin: 0, color: 'white', fontSize: 18 }}>
+                    متجر المكملات
+                  </Title>
+                ) : (
+                  <Title level={4} style={{ margin: 0, color: 'white' }}>S</Title>
+                )}
+              </div>
             </div>
-          )}
-        </Sider>
+            
+            <div style={{ padding: '0 16px', marginBottom: 16 }}>
+               <Text type="secondary" style={{ fontSize: 12, padding: '0 12px', display: collapsed ? 'none' : 'block' }}>
+                 القائمة الرئيسية
+               </Text>
+            </div>
+
+            <Menu
+              theme="light"
+              mode="inline"
+              selectedKeys={[pathname]}
+              items={menuItems}
+              style={{ borderLeft: 0, borderRight: 0 }}
+            />
+            
+            {!collapsed && (
+              <div style={{ 
+                position: 'absolute', 
+                bottom: 24, 
+                left: 24, 
+                right: 24, 
+                padding: 16, 
+                background: '#f8fafc', 
+                borderRadius: 12,
+                textAlign: 'center'
+              }}>
+                <GlobalOutlined style={{ color: '#01caa8', fontSize: 24, marginBottom: 8 }} />
+                <div style={{ fontSize: 12, color: '#64748b' }}>نسخة النظام</div>
+                <div style={{ fontSize: 14, fontWeight: 'bold', color: '#1e293b' }}>v2.4.0</div>
+              </div>
+            )}
+          </Sider>
+        )}
         
         {/* Main Content Area */}
         <Layout 
           style={{ 
-            marginRight: collapsed ? 80 : 280, 
+            marginRight: isMobile ? 0 : (collapsed ? 80 : 280), 
             transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
             background: '#f1f5f9',
-            minHeight: '100vh'
+            minHeight: '100vh',
+            paddingBottom: isMobile ? 80 : 0 // Space for bottom tabs
           }}
         >
           <Header 
             style={{ 
-              padding: '0 24px', 
+              padding: isMobile ? '0 16px' : '0 24px', 
               background: 'rgba(255, 255, 255, 0.8)', 
               backdropFilter: 'blur(12px)',
               display: 'flex', 
@@ -224,45 +249,47 @@ export default function DashboardLayout({ children }) {
               top: 0,
               zIndex: 99,
               boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-              borderBottom: '1px solid #f1f5f9'
+              borderBottom: '1px solid #f1f5f9',
+              height: 64
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <Button
-                type="text"
-                icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                onClick={() => setCollapsed(!collapsed)}
-                style={{ 
-                  fontSize: '18px', 
-                  width: 40, 
-                  height: 40, 
-                  borderRadius: 10,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: '#f8fafc'
-                }}
-              />
-              <Title level={5} style={{ margin: 0 }}>
-                {menuItems.find(item => item.key === pathname)?.label || 'لوحة التحكم'}
-              </Title>
-            </div>
-            
-            <Space size={20}>
-              {/* <Badge count={5} size="small" offset={[-2, 2]}>
-                <Button 
-                  type="text" 
-                  icon={<BellOutlined />} 
+            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 16 }}>
+              {!isMobile && (
+                <Button
+                  type="text"
+                  icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                  onClick={() => setCollapsed(!collapsed)}
                   style={{ 
                     fontSize: '18px', 
                     width: 40, 
                     height: 40, 
                     borderRadius: 10,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     background: '#f8fafc'
-                  }} 
+                  }}
                 />
-              </Badge> */}
-              
+              )}
+              {isMobile && (
+                 <div style={{ 
+                    width: 35, 
+                    height: 35, 
+                    background: 'linear-gradient(135deg, #01caa8 0%, #00b497 100%)', 
+                    borderRadius: 8,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontWeight: 'bold'
+                  }}>S</div>
+              )}
+              <Title level={5} style={{ margin: 0, fontSize: isMobile ? 16 : 20 }}>
+                {menuItems.find(item => item.key === pathname)?.label?.props?.children || 'لوحة التحكم'}
+              </Title>
+            </div>
+            
+            <Space size={isMobile ? 8 : 20}>
               <Dropdown
                 menu={{
                   onClick: async (e) => {
@@ -273,7 +300,6 @@ export default function DashboardLayout({ children }) {
                     }
                   },
                   items: [
-                    // { key: 'profile', label: 'الملف الشخصي', icon: <UserOutlined /> },
                     { key: 'settings', label: 'إعدادات الحساب', icon: <SettingOutlined /> },
                     { type: 'divider' },
                     { key: 'logout', label: 'تسجيل الخروج', icon: <LogoutOutlined />, danger: true },
@@ -282,22 +308,21 @@ export default function DashboardLayout({ children }) {
                 placement="bottomLeft"
                 arrow
               >
-
                 <Space style={{ 
                   cursor: 'pointer', 
-                  padding: '4px 12px', 
+                  padding: isMobile ? '4px 4px' : '4px 12px', 
                   borderRadius: 12, 
-                //   background: '#f8fafc',
-                //   border: '1px solid #f1f5f9'
                 }}>
                   <Avatar 
                     src="https://api.dicebear.com/9.x/notionists/svg?seed=Felix" 
-                    style={{ backgroundColor: '#01caa8' }} 
+                    style={{ backgroundColor: '#01caa8', width: isMobile ? 32 : 40, height: isMobile ? 32 : 40 }} 
                   />
-                  <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
-                    <Text strong style={{ fontSize: 13 }}>أحمد علي</Text>
-                    <Text type="secondary" style={{ fontSize: 11 }}>المدير العام</Text>
-                  </div>
+                  {!isMobile && (
+                    <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
+                      <Text strong style={{ fontSize: 13 }}>أحمد علي</Text>
+                      <Text type="secondary" style={{ fontSize: 11 }}>المدير العام</Text>
+                    </div>
+                  )}
                 </Space>
               </Dropdown>
             </Space>
@@ -305,7 +330,7 @@ export default function DashboardLayout({ children }) {
           
           <Content
             style={{
-              padding: '32px',
+              padding: isMobile ? '16px' : '32px',
               minHeight: 280,
             }}
           >
@@ -318,6 +343,54 @@ export default function DashboardLayout({ children }) {
             </div>
           </Content>
         </Layout>
+
+        {/* Mobile Bottom Navigation */}
+        {isMobile && (
+          <div className="mobile-bottom-nav">
+            {mobileTabs.map((tab) => {
+              if (tab.key === 'more') {
+                return (
+                  <Dropdown
+                    key="more"
+                    menu={{
+                      items: [
+                        {
+                          key: '/dashboard/bannars',
+                          icon: <PictureOutlined />,
+                          label: <Link href="/dashboard/bannars">البنرات</Link>,
+                        },
+                        {
+                          key: '/dashboard/admins',
+                          icon: <UserOutlined />,
+                          label: <Link href="/dashboard/admins">المدراء</Link>,
+                        },
+                        {
+                          key: '/dashboard/settings',
+                          icon: <SettingOutlined />,
+                          label: <Link href="/dashboard/settings">الإعدادات</Link>,
+                        },
+                      ],
+                    }}
+                    placement="topCenter"
+                    trigger={['click']}
+                  >
+                    <div className="nav-item">
+                      <div className="nav-icon"><MoreOutlined /></div>
+                      <div className="nav-label">المزيد</div>
+                    </div>
+                  </Dropdown>
+                );
+              }
+              const isActive = pathname === tab.key;
+              return (
+                <Link href={tab.key} key={tab.key} className={`nav-item ${isActive ? 'active' : ''}`}>
+                  <div className="nav-icon">{tab.icon}</div>
+                  <div className="nav-label">{tab.label}</div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </Layout>
 
       <style jsx global>{`
@@ -338,6 +411,55 @@ export default function DashboardLayout({ children }) {
           border-top: 1px solid #f0f0f0;
         }
 
+        /* Mobile Bottom Nav Styles */
+        .mobile-bottom-nav {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 70px;
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(20px);
+          display: flex;
+          justify-content: space-around;
+          align-items: center;
+          padding: 0 10px;
+          border-top: 1px solid #f1f5f9;
+          z-index: 1000;
+          box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          color: #94a3b8;
+          text-decoration: none;
+          transition: all 0.3s ease;
+          flex: 1;
+          height: 100%;
+        }
+
+        .nav-item.active {
+          color: #01caa8;
+        }
+
+        .nav-icon {
+          font-size: 20px;
+          margin-bottom: 4px;
+          transition: transform 0.3s ease;
+        }
+
+        .nav-item.active .nav-icon {
+          transform: translateY(-2px);
+        }
+
+        .nav-label {
+          font-size: 11px;
+          font-weight: 500;
+        }
+
         /* Fix for scrollbar in sidebar */
         .ant-layout-sider-children::-webkit-scrollbar {
           width: 4px;
@@ -345,6 +467,16 @@ export default function DashboardLayout({ children }) {
         .ant-layout-sider-children::-webkit-scrollbar-thumb {
           background: #e2e8f0;
           border-radius: 10px;
+        }
+
+        /* Responsive adjustments for tables and cards */
+        @media (max-width: 768px) {
+          .ant-table-wrapper {
+            overflow-x: auto;
+          }
+          .ant-card-body {
+            padding: 12px !important;
+          }
         }
       `}</style>
     </ConfigProvider>

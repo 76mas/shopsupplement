@@ -98,13 +98,13 @@ const BannersPage = () => {
 
   return (
     <div style={{ direction: 'rtl' }}>
-      <Row gutter={[24, 24]} align="middle" style={{ marginBottom: 24 }}>
-        <Col span={18}>
-          <Title level={2} style={{ margin: 0 }}>إدارة البنرات والصفحة الرئيسية</Title>
+      <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 24 }}>
+        <Col xs={20} sm={18}>
+          <Title level={2} style={{ margin: 0, fontSize: '1.5rem' }}>إدارة البنرات والصفحة الرئيسية</Title>
           <Text type="secondary">التحكم في الأقسام والمنتجات المعروضة في واجهة المتجر</Text>
         </Col>
-        <Col span={6} style={{ textAlign: 'left' }}>
-          <Button icon={<ReloadOutlined />} onClick={fetchAll} loading={loading}>تحديث</Button>
+        <Col xs={4} sm={6} style={{ textAlign: 'left' }}>
+          <Button icon={<ReloadOutlined />} onClick={fetchAll} loading={loading} />
         </Col>
       </Row>
 
@@ -115,7 +115,7 @@ const BannersPage = () => {
               bordered={false}
               style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}
             >
-              <Row gutter={24} align="middle">
+              <Row gutter={[24, 24]} align="middle">
                 {/* Left: icon + title */}
                 <Col xs={24} md={6}>
                   <div style={{ padding: '0 10px' }}>
@@ -219,7 +219,7 @@ const BannersPage = () => {
                     size="large"
                     loading={saving === type}
                     onClick={() => handleSave(type)}
-                    style={{ borderRadius: 8, minWidth: 140 }}
+                    style={{ borderRadius: 8, width: '100%' }}
                   >
                     حفظ التغييرات
                   </Button>

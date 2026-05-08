@@ -247,21 +247,22 @@ const SettingsPage = () => {
 
   return (
     <div style={{ direction: 'rtl' }}>
-      <Row gutter={[24, 24]} align="middle" style={{ marginBottom: 24 }}>
-        <Col span={12}>
-          <Title level={2} style={{ margin: 0 }}>الإعدادات</Title>
+      <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 24 }}>
+        <Col xs={24} sm={12}>
+          <Title level={2} style={{ margin: 0, fontSize: '1.5rem' }}>الإعدادات</Title>
           <Text type="secondary">تخصيص معلومات المتجر، الشحن، وروابط التواصل</Text>
         </Col>
-        <Col span={12} style={{ textAlign: 'left' }}>
+        <Col xs={24} sm={12} style={{ textAlign: 'left' }}>
           <Button
             type="primary"
             icon={<SaveOutlined />}
             size="large"
             loading={saving}
             onClick={saveShopInfo}
-            style={{ borderRadius: 10, height: 45, padding: '0 24px' }}
+            style={{ borderRadius: 10, height: 45, padding: '0 24px', width: 'auto' }}
+            block={false}
           >
-            حفظ كافة التعديلات
+            حفظ التغييرات
           </Button>
         </Col>
       </Row>

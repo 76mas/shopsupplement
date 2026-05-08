@@ -128,8 +128,25 @@ export async function buildWhatsAppUrl({ name, phoneNumber, address, items, deli
     `✅ *الإجمالي: ${total.toLocaleString()} د.ع*`,
   ].join('\n');
 
-  // رقم واتساب المتجر: 07727488537 → 9647727488537
-  const storeWhatsApp = '9647727488537';
+  // ── جلب رقم واتساب المتجر من قاعدة البيانات ──────────────────
+  let storeWhatsApp = '9647727488537'; // رقم افتراضي
+  try {
+    const shopInfo = await prisma.shopInfo.findFirst({ select: { phoneNumbers: true } });
+    if (shopInfo?.phoneNumbers) {
+      // تنظيف الرقم وتحويله لصيغة واتساب الدولية
+      const cleanPhone = shopInfo.phoneNumbers.replace(/\s/g, '');
+      if (cleanPhone.startsWith('0')) {
+        storeWhatsApp = '964' + cleanPhone.slice(1);
+      } else if (cleanPhone.startsWith('+964')) {
+        storeWhatsApp = cleanPhone.slice(1);
+      } else if (cleanPhone.startsWith('964')) {
+        storeWhatsApp = cleanPhone;
+      }
+    }
+  } catch (error) {
+    console.error('[buildWhatsAppUrl] Error fetching ShopInfo:', error);
+  }
+
   const url = `https://wa.me/${storeWhatsApp}?text=${encodeURIComponent(message)}`;
 
   return { success: true, url };

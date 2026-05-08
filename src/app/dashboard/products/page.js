@@ -4,7 +4,7 @@ import {
   Table, Button, Modal, Form, Input, InputNumber,
   Select, Switch, Space, Tag, Typography, Card,
   Row, Col, message, Tooltip, Popconfirm,
-  Image, Upload, ColorPicker,
+  Image, Upload, ColorPicker, Spin
 } from 'antd';
 import {
   PlusOutlined, EditOutlined, DeleteOutlined,
@@ -14,6 +14,7 @@ import {
   getProducts, createProduct, updateProduct,
   deleteProduct, getCategoriesList,
 } from './action';
+// import LoadingOutlined from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -110,6 +111,15 @@ const ProductPage = () => {
   const [editing, setEditing]     = useState(null);
   const [isPending, startTransition] = useTransition();
   const [form] = Form.useForm();
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // صور موجودة (عند التعديل) — لعرضها ومتابعة الحذف
   const [existingImages, setExistingImages] = useState([]);
@@ -302,24 +312,106 @@ const ProductPage = () => {
   return (
     <div style={{ direction: 'rtl' }}>
       {/* Header */}
-      <Row gutter={[24, 24]} align="middle" style={{ marginBottom: 24 }}>
-        <Col span={12}>
-          <Title level={2} style={{ margin: 0 }}>المنتجات</Title>
+      <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 24 }}>
+        <Col xs={24} sm={12}>
+          <Title level={2} style={{ margin: 0, fontSize: '1.5rem' }}>المنتجات</Title>
           <Text type="secondary">إدارة منتجات المتجر وتحديث تفاصيلها</Text>
         </Col>
-        <Col span={12} style={{ textAlign: 'left' }}>
+        <Col xs={24} sm={12} style={{ textAlign: 'left' }}>
           <Button type="primary" icon={<PlusOutlined />} size="large" onClick={openAdd}
-            style={{ borderRadius: 10, height: 45, padding: '0 24px' }}>
+            style={{ borderRadius: 10, height: 45, padding: '0 24px', width: 'auto' }} block={false}>
             إضافة منتج جديد
           </Button>
         </Col>
       </Row>
 
-      {/* Table */}
-      <Card variant="borderless" style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-        <Table columns={columns} dataSource={products} pagination={{ pageSize: 10 }}
-          loading={{ spinning: loading, indicator: <LoadingOutlined style={{ fontSize: 28 }} spin /> }} />
-      </Card>
+      {/* Products List */}
+      <Spin spinning={loading} indicator={<LoadingOutlined style={{ fontSize: 32 }} spin />}>
+        {isMobile ? (
+          <Row gutter={[16, 16]}>
+            {products.map((r) => (
+              <Col xs={24} key={r.id}>
+                <Card 
+                  variant="borderless" 
+                  style={{ borderRadius: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+                  bodyStyle={{ padding: '12px' }}
+                >
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <div style={{ width: 80, height: 80, borderRadius: 12, overflow: 'hidden', background: '#f5f5f5', flexShrink: 0 }}>
+                      {r.productImages?.[0]?.image ? (
+                        <Image src={r.productImages[0].image} alt={r.name}
+                          width={80} height={80} style={{ objectFit: 'cover' }} preview={false} />
+                      ) : (
+                        <div style={{ width: 80, height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ccc' }}>
+                          <ShoppingOutlined style={{ fontSize: 24 }} />
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <Text strong style={{ fontSize: 15, display: 'block' }}>{r.name}</Text>
+                          {r.category && <Tag color="blue" style={{ marginTop: 4, borderRadius: 4 }}>{r.category.name}</Tag>}
+                        </div>
+                        <div style={{ textAlign: 'left' }}>
+                          <Text strong style={{ color: '#01caa8', display: 'block' }}>{Number(r.endPrice).toLocaleString()} د.ع</Text>
+                          {Number(r.price) !== Number(r.endPrice) && (
+                            <Text delete type="secondary" style={{ fontSize: 11 }}>{Number(r.price).toLocaleString()} د.ع</Text>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+                        <Space>
+                           <Tag color={r.stock < 10 ? 'red' : 'green'} style={{ borderRadius: 4 }}>
+                             {r.stock} قطعة
+                           </Tag>
+                           <Tag color={r.isAvailable ? 'cyan' : 'default'} style={{ borderRadius: 4 }}>
+                             {r.isAvailable ? 'متوفر' : 'غير متوفر'}
+                           </Tag>
+                        </Space>
+                        <Space size={4}>
+                          <Button 
+                            type="text" 
+                            size="small"
+                            icon={<EditOutlined style={{ color: '#1677ff' }} />} 
+                            onClick={() => openEdit(r)} 
+                            style={{ background: '#f0f7ff' }}
+                          />
+                          <Popconfirm
+                            title="حذف المنتج"
+                            onConfirm={() => handleDelete(r.id)}
+                            okText="حذف" cancelText="إلغاء"
+                            okButtonProps={{ danger: true }}
+                          >
+                            <Button 
+                              type="text" 
+                              size="small"
+                              icon={<DeleteOutlined style={{ color: '#ff4d4f' }} />} 
+                              style={{ background: '#fff1f0' }}
+                            />
+                          </Popconfirm>
+                        </Space>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+            ))}
+            {products.length === 0 && (
+              <Col span={24}>
+                <Card variant="borderless" style={{ textAlign: 'center', padding: 40, borderRadius: 16 }}>
+                  <Text type="secondary">لا توجد منتجات حالياً</Text>
+                </Card>
+              </Col>
+            )}
+          </Row>
+        ) : (
+          <Card variant="borderless" style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+            <Table columns={columns} dataSource={products} pagination={{ pageSize: 10 }} />
+          </Card>
+        )}
+      </Spin>
 
       {/* Modal Add / Edit */}
       <Modal
@@ -334,9 +426,8 @@ const ProductPage = () => {
           initialValues={{ isAvailable: true, images: [] }}
           style={{ marginTop: 16 }}>
           
-          <Row gutter={24}>
-            {/* يسار: معلومات */}
-            <Col span={16}>
+          <Row gutter={[16, 16]}>
+            <Col xs={24} md={16}>
               <Form.Item name="name" label="اسم المنتج"
                 rules={[{ required: true, message: 'يرجى إدخال اسم المنتج' }]}>
                 <Input placeholder="مثال: Whey Gold Standard" size="large" />
@@ -346,8 +437,7 @@ const ProductPage = () => {
               </Form.Item>
             </Col>
 
-            {/* يمين: فئة */}
-            <Col span={8}>
+            <Col xs={24} md={8}>
               <Form.Item name="categoryId" label="الفئة">
                 <Select placeholder="اختر الفئة" size="large" allowClear>
                   {categories.map((c) => (
@@ -360,25 +450,24 @@ const ProductPage = () => {
               </Form.Item>
             </Col>
           </Row>
-
-          <Row gutter={24}>
-            <Col span={8}>
-              <Form.Item name="price" label="السعر الأساسي (قبل الخصم)"
+          <Row gutter={[16, 16]}>
+            <Col xs={24} sm={8}>
+              <Form.Item name="price" label="السعر الأساسي"
                 rules={[{ required: true, message: 'يرجى إدخال السعر' }]}>
                 <InputNumber style={{ width: '100%' }} size="large" min={0}
                   formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                   parser={(v) => v.replace(/,*/g, '')} addonAfter="د.ع" />
               </Form.Item>
             </Col>
-            <Col span={8}>
-              <Form.Item name="endPrice" label="سعر البيع الفعلي"
+            <Col xs={24} sm={8}>
+              <Form.Item name="endPrice" label="سعر البيع"
                 rules={[{ required: true, message: 'يرجى إدخال سعر البيع' }]}>
                 <InputNumber style={{ width: '100%' }} size="large" min={0}
                   formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                   parser={(v) => v.replace(/,*/g, '')} addonAfter="د.ع" />
               </Form.Item>
             </Col>
-            <Col span={8}>
+            <Col xs={24} sm={8}>
               <Form.Item name="stock" label="المخزون"
                 rules={[{ required: true, message: 'يرجى إدخال الكمية' }]}>
                 <InputNumber style={{ width: '100%' }} size="large" min={0} />
