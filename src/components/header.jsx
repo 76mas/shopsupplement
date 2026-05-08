@@ -74,13 +74,13 @@ const Header = () => {
                     document.getElementById("newadded")?.scrollIntoView({ behavior: "smooth" });
                   }
                 }}
-                className="cursor-pointer hover:text-[#01caa8] transition-colors whitespace-nowrap"
+                className="cursor-pointer hover:text-[#666] transition-colors whitespace-nowrap"
               >
                 مضافة حديثاً
               </Link>
               <Link
                 href="/products"
-                className="cursor-pointer hover:text-[#01caa8] transition-colors whitespace-nowrap"
+                className="cursor-pointer hover:text-[#666] transition-colors whitespace-nowrap"
               >
                 المنتجات
               </Link>
@@ -101,7 +101,7 @@ const Header = () => {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="ابحث عن مكملك الغذائي..."
-                className="w-full bg-[#F0F0F0] border-none rounded-full py-2.5 ps-12 pe-4 focus:ring-1 focus:ring-[#01caa8]/30 outline-none text-sm placeholder:text-[#00000066] transition-all"
+                className="w-full bg-[#F0F0F0] border-none rounded-full py-2.5 ps-12 pe-4 focus:ring-1 focus:ring-[#555]/30 outline-none text-sm placeholder:text-[#00000066] transition-all"
               />
             </form>
 
@@ -135,7 +135,7 @@ const Header = () => {
                       initial={{ scale: 0.5, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0.5, opacity: 0 }}
-                      className="absolute top-0 right-0 bg-[#01caa8] text-white text-[10px] min-w-[16px] h-4 px-0.5 rounded-full flex items-center justify-center font-bold border border-white"
+                      className="absolute top-0 right-0 bg-[#0f0f0f] text-white text-[10px] min-w-[16px] h-4 px-0.5 rounded-full flex items-center justify-center font-bold border border-white"
                     >
                       {cartCount > 99 ? "99+" : cartCount}
                     </motion.span>

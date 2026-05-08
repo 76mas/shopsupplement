@@ -33,7 +33,6 @@ export function CartProvider({ children }) {
         },
       ];
     });
-    setOpen(true); // افتح السلة تلقائياً
   }, []);
 
   // تحديث الكمية

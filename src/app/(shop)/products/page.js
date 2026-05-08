@@ -266,16 +266,16 @@ const ProductsContent = () => {
                         )}
 
                         {/* Quick Add hover button */}
-                        <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-4 z-30">
+                        <div className="absolute inset-0 bg-black/5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-end justify-center p-4 z-30">
                           {isAvailable ? (
                             <button
                               onClick={(e) => handleQuickAdd(e, product)}
-                              className="w-full cursor-pointer active:scale-[0.98] bg-white/90 backdrop-blur-sm text-black py-2 rounded-xl text-xs font-bold transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
+                              className="w-full cursor-pointer active:scale-[0.98] bg-white/90 backdrop-blur-sm text-black py-2 rounded-xl text-xs font-bold transform translate-y-0 md:translate-y-4 md:group-hover:translate-y-0 transition-transform duration-300"
                             >
                               إضافة للسلة
                             </button>
                           ) : (
-                            <div className="w-full bg-black/60 backdrop-blur-sm text-white/70 py-2 rounded-xl text-xs font-bold text-center transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 cursor-not-allowed">
+                            <div className="w-full bg-black/60 backdrop-blur-sm text-white/70 py-2 rounded-xl text-xs font-bold text-center transform translate-y-0 md:translate-y-4 md:group-hover:translate-y-0 transition-transform duration-300 cursor-not-allowed">
                               نفذ من المخزون
                             </div>
                           )}

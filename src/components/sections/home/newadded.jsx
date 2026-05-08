@@ -6,9 +6,10 @@ import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useState } from "react";
 import ProductDrawer from "@/components/product/product-drawer";
 import { motion } from "motion/react";
+import { useCart } from "@/context/cart-context";
+
 // مصفوفة المنتجات (المضافة حديثاً)
 const products = [
-
   {
     id: 5,
     name: "BCAA Energy",
@@ -28,8 +29,7 @@ const products = [
       { name: "30 حصة", price_suffix: "" }
     ]
   },
-
-    {
+  {
     id: 1,
     name: "Whey Gold Standard",
     price: 95000,
@@ -140,7 +140,18 @@ const NewAdded = ({ fetchedProducts = [] }) => {
   const router = useRouter();
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const { addItem } = useCart();
 
+  const handleQuickAdd = (e, product) => {
+    e.stopPropagation();
+    const flavors = Array.isArray(product.flavors) ? product.flavors : [];
+    const sizes = Array.isArray(product.sizes) ? product.sizes : [];
+    addItem(product, {
+      flavor: flavors[0] ?? null,
+      size: sizes[0] ?? null,
+      quantity: 1,
+    });
+  };
   const [emblaRef, emblaApi] = useEmblaCarousel({
     direction: "rtl",
     align: "start",
@@ -265,6 +276,16 @@ const NewAdded = ({ fetchedProducts = [] }) => {
                     }}
                     className="absolute inset-0 p-0 z-20 pointer-events-none  w-full h-auto"
                   />
+
+                  {/* Quick Add Button */}
+                  <div className="absolute inset-0 bg-black/5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-end justify-center p-4 z-30">
+                    <button
+                      onClick={(e) => handleQuickAdd(e, product)}
+                      className="w-full cursor-pointer active:scale-[0.98] bg-white/90 backdrop-blur-sm text-black py-2 rounded-xl text-xs font-bold transform translate-y-0 md:translate-y-4 md:group-hover:translate-y-0 transition-transform duration-300 shadow-sm"
+                    >
+                      إضافة للسلة
+                    </button>
+                  </div>
                 </div>
 
                 {/* تفاصيل المنتج */}

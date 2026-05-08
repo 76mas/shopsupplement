@@ -13,23 +13,39 @@ export default function ProductDrawer({ product, open, onOpenChange }) {
   // ──── نختار النكهة/الحجم هنا لنمررها لزر الموبايل ────
   const [selectedFlavor, setSelectedFlavor] = React.useState(0);
   const [selectedSize, setSelectedSize] = React.useState(0);
-  const { addItem } = useCart();
+  const { addItem, count, setOpen: setCartOpen } = useCart();
   const [added, setAdded] = React.useState(false);
 
-  const snapPoints = [0.8, 1];
+  const snapPoints = [0.6, 1];
 
   const flavors = Array.isArray(product?.flavors) ? product.flavors : [];
   const sizes = Array.isArray(product?.sizes) ? product.sizes : [];
 
   const handleAddToCart = () => {
     if (!product || !product.isAvailable) return;
+    
+    const isFirstItem = count === 0;
+
     addItem(product, {
       flavor: flavors[selectedFlavor] ?? null,
       size: sizes[selectedSize] ?? null,
       quantity,
     });
     setAdded(true);
-    setTimeout(() => { setAdded(false); }, 2000);
+    
+    // 1. انتظر قليلاً ليرى المستخدم علامة الصح
+    setTimeout(() => {
+      // 2. أغلق نافذة المنتج أولاً
+      onOpenChange(false);
+      setAdded(false);
+      
+      // 3. إذا كان أول منتج، افتح السلة بعد أن تنغلق نافذة المنتج تماماً
+      if (isFirstItem) {
+        setTimeout(() => {
+          setCartOpen(true);
+        }, 500); // مهلة انتظار لغلق الدرور الأول
+      }
+    }, 600);
   };
 
   // Reset state when product changes
@@ -99,14 +115,8 @@ export default function ProductDrawer({ product, open, onOpenChange }) {
             </Drawer.Content>
 
             {/* Fixed Bottom Actions - Mobile Only */}
-            <div
-              className="absolute left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-gray-100 z-50 lg:hidden"
-              style={{
-                bottom: 'var(--drawer-snap-point-offset)',
-                transform: 'translateY(var(--drawer-swipe-movement-y))'
-              }}
-            >
-              <div className="w-full lg:max-w-6xl lg:mx-auto p-6 flex items-center gap-4 text-black">
+            <div className={`${styles.FixedActions} lg:hidden`}>
+              <div className="w-full lg:max-w-6xl lg:mx-auto p-6 pb-8 flex items-center gap-4 text-black">
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
