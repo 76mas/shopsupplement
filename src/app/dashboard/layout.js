@@ -478,6 +478,24 @@ export default function DashboardLayout({ children }) {
             padding: 12px !important;
           }
         }
+
+        @media print {
+          .mobile-bottom-nav,
+          .ant-layout-sider,
+          .ant-layout-header,
+          .no-print {
+            display: none !important;
+          }
+          .ant-layout {
+            background: #fff !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+          .ant-layout-content {
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+        }
       `}</style>
     </ConfigProvider>
   );
