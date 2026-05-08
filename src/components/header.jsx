@@ -62,7 +62,7 @@ const Header = () => {
                     document.getElementById("bestseller")?.scrollIntoView({ behavior: "smooth" });
                   }
                 }}
-                className="cursor-pointer hover:text-[#01caa8] transition-colors whitespace-nowrap"
+                className="cursor-pointer hover:text-[#666] transition-colors whitespace-nowrap"
               >
                 الأكثر مبيعاً
               </Link>
