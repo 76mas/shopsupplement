@@ -1,6 +1,6 @@
 "use client";
 import Container from "@/components/container";
-import { useState, useEffect, useCallback, useTransition } from "react";
+import { useState, useEffect, useCallback, useTransition, Suspense } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import FilterContent, { FilterIcon } from "./filter-content";
@@ -30,7 +30,7 @@ const SkeletonCard = () => (
   </div>
 );
 
-const Allproducts = () => {
+const ProductsContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -364,4 +364,10 @@ const Allproducts = () => {
   );
 };
 
-export default Allproducts;
+export default function Allproducts() {
+  return (
+    <Suspense fallback={<div className="w-full text-black py-20 min-h-screen flex justify-center bg-white" dir="rtl"><Container className="flex justify-center pt-24"><div className="animate-pulse flex items-center gap-2 font-bold text-xl">جاري التحميل...</div></Container></div>}>
+      <ProductsContent />
+    </Suspense>
+  );
+}
