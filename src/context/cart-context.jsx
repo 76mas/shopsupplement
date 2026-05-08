@@ -25,7 +25,7 @@ export function CartProvider({ children }) {
           key,
           id: product.id,
           name: product.name,
-          price: Number(product.endPrice ?? product.price),
+          price: Number(product.endPrice ?? product.price) + (Number(size?.price) || 0),
           image: product.productImages?.[0]?.image ?? product.image ?? "",
           flavor: flavor?.name ?? null,
           size: size?.name ?? null,

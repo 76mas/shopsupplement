@@ -18,8 +18,13 @@ export default function ProductDrawer({ product, open, onOpenChange }) {
 
   const snapPoints = [0.6, 1];
 
-  const flavors = Array.isArray(product?.flavors) ? product.flavors : [];
-  const sizes = Array.isArray(product?.sizes) ? product.sizes : [];
+  const flavors = Array.isArray(product?.flavors) 
+    ? product.flavors 
+    : (typeof product?.flavors === 'string' ? JSON.parse(product.flavors) : []);
+
+  const sizes = Array.isArray(product?.sizes) 
+    ? product.sizes 
+    : (typeof product?.sizes === 'string' ? JSON.parse(product.sizes) : []);
 
   const handleAddToCart = () => {
     if (!product || !product.isAvailable) return;

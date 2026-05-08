@@ -453,6 +453,7 @@ const ProductPage = () => {
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={8}>
               <Form.Item name="price" label="السعر الأساسي"
+                help="سعر العرض الأساسي (عادةً لأصغر حجم)"
                 rules={[{ required: true, message: 'يرجى إدخال السعر' }]}>
                 <InputNumber style={{ width: '100%' }} size="large" min={0}
                   formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
@@ -461,6 +462,7 @@ const ProductPage = () => {
             </Col>
             <Col xs={24} sm={8}>
               <Form.Item name="endPrice" label="سعر البيع"
+                help="سعر البيع الفعلي (يظهر كالسعر الحالي)"
                 rules={[{ required: true, message: 'يرجى إدخال سعر البيع' }]}>
                 <InputNumber style={{ width: '100%' }} size="large" min={0}
                   formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
@@ -521,6 +523,12 @@ const ProductPage = () => {
 
           {/* الأحجام */}
           <Card size="small" title="الأحجام المتوفرة" style={{ marginBottom: 16, borderRadius: 12 }}>
+            <div style={{ marginBottom: 12, padding: '8px 12px', background: '#fff7e6', border: '1px solid #ffd591', borderRadius: 8 }}>
+              <Text type="warning" strong style={{ fontSize: 12 }}>
+                ملاحظة: السعر الذي تضعه هنا سيتم إضافته (Addon) على سعر البيع الأساسي المذكور أعلاه. 
+                اجعل السعر 0 للحجم الأساسي (الأصغر).
+              </Text>
+            </div>
             <Form.List name="sizes">
               {(fields, { add, remove }) => (
                 <>

@@ -44,6 +44,7 @@ const OrderDetailsPage = () => {
   const [allProducts,  setAllProducts]  = useState([]);
   const [addForm]      = Form.useForm();
   const [addingItem,   setAddingItem]   = useState(false);
+  const [selectedProductInModal, setSelectedProductInModal] = useState(null);
 
   // ── Fetch order ───────────────────────────────────────
   const fetchOrder = useCallback(async () => {
@@ -100,12 +101,18 @@ const OrderDetailsPage = () => {
   // ── Add item ──────────────────────────────────────────
   const handleAddItem = async (values) => {
     setAddingItem(true);
-    const res = await addOrderItem(orderId, { productId: values.productId, quantity: values.quantity });
+    const res = await addOrderItem(orderId, { 
+      productId: values.productId, 
+      quantity: values.quantity,
+      flavor: values.flavor,
+      size: values.size
+    });
     if (res.success) {
       setOrder((prev) => ({ ...prev, items: [...prev.items, res.item] }));
       message.success(res.message);
       setAddModalOpen(false);
       addForm.resetFields();
+      setSelectedProductInModal(null);
       // أعد جلب الطلب لتحديث الإجمالي
       fetchOrder();
     } else {
@@ -145,7 +152,13 @@ const OrderDetailsPage = () => {
               style={{ borderRadius: 8, background: '#f0f0f0', flexShrink: 0 }}
             />
             <div>
-              <Text strong>{name}</Text>
+              <Text strong style={{ display: 'block' }}>{name}</Text>
+              {(record.flavor || record.size) && (
+                <div style={{ marginTop: 4 }}>
+                  {record.flavor && <Tag size="small" color="blue" style={{ borderRadius: 4, fontSize: 10 }}>{record.flavor}</Tag>}
+                  {record.size && <Tag size="small" color="orange" style={{ borderRadius: 4, fontSize: 10 }}>{record.size}</Tag>}
+                </div>
+              )}
             </div>
           </Space>
         );
@@ -281,7 +294,13 @@ const OrderDetailsPage = () => {
             <tbody>
               {order.items.map((item, i) => (
                 <tr key={item.id} style={{ borderBottom: '1px solid #eee', background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
-                  <td style={{ padding: '12px' }}>{item.product?.name ?? '—'}</td>
+                  <td style={{ padding: '12px' }}>
+                    <div style={{ fontWeight: 'bold' }}>{item.product?.name ?? '—'}</div>
+                    <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
+                      {item.flavor && <span style={{ marginLeft: '8px' }}>النكهة: {item.flavor}</span>}
+                      {item.size && <span>الحجم: {item.size}</span>}
+                    </div>
+                  </td>
                   <td style={{ textAlign: 'center', padding: '12px' }}>{Number(item.price).toLocaleString()} د.ع</td>
                   <td style={{ textAlign: 'center', padding: '12px' }}>{item.quantity}</td>
                   <td style={{ textAlign: 'left', padding: '12px', fontWeight: 'bold' }}>{(Number(item.price) * item.quantity).toLocaleString()} د.ع</td>
@@ -348,6 +367,12 @@ const OrderDetailsPage = () => {
                         />
                         <div style={{ flex: 1, minWidth: 0 }}>
                            <Text strong style={{ display: 'block', fontSize: 14 }}>{item.product?.name ?? '—'}</Text>
+                           {(item.flavor || item.size) && (
+                             <div style={{ marginTop: 4, display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                               {item.flavor && <Tag size="small" color="blue" style={{ borderRadius: 4, fontSize: 10, margin: 0 }}>{item.flavor}</Tag>}
+                               {item.size && <Tag size="small" color="orange" style={{ borderRadius: 4, fontSize: 10, margin: 0 }}>{item.size}</Tag>}
+                             </div>
+                           )}
                            <div style={{ marginTop: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                               <div>
                                 <Text type="secondary" style={{ fontSize: 12 }}>الكمية: </Text>
@@ -497,6 +522,7 @@ const OrderDetailsPage = () => {
                 value: p.id,
                 label: p.name,
               }))}
+              onChange={(id) => setSelectedProductInModal(allProducts.find(p => p.id === id))}
               optionRender={(option) => {
                 const p = allProducts.find((x) => x.id === option.value);
                 const img = p?.productImages?.[0]?.image;
@@ -513,6 +539,28 @@ const OrderDetailsPage = () => {
               size="large"
             />
           </Form.Item>
+
+          {selectedProductInModal?.flavors?.length > 0 && (
+            <Form.Item name="flavor" label="النكهة">
+              <Select placeholder="اختر النكهة">
+                {selectedProductInModal.flavors.map((f, i) => (
+                  <Select.Option key={i} value={f.name}>{f.name}</Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+          )}
+
+          {selectedProductInModal?.sizes?.length > 0 && (
+            <Form.Item name="size" label="الحجم">
+              <Select placeholder="اختر الحجم">
+                {selectedProductInModal.sizes.map((s, i) => (
+                  <Select.Option key={i} value={s.name}>
+                    {s.name} {s.price > 0 ? `(+${Number(s.price).toLocaleString()} د.ع)` : ''}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+          )}
 
           <Form.Item
             name="quantity"

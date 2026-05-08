@@ -48,9 +48,19 @@ export async function createOrder({ name, phoneNumber, address, items, deliveryP
 
     // ── حساب الإجمالي من أسعار DB (لا نثق بأسعار الـ client) ──
     const subtotal = items.reduce((acc, item) => {
-      const price = Number(productMap[Number(item.id)]?.endPrice ?? item.price);
-      return acc + price * item.quantity;
+      const p = productMap[Number(item.id)];
+      const basePrice = Number(p?.endPrice ?? item.price);
+
+      let addon = 0;
+      if (item.size && Array.isArray(p?.sizes)) {
+        const sizeObj = p.sizes.find((s) => s.name === item.size);
+        addon = Number(sizeObj?.price || 0);
+      }
+
+      const finalPrice = basePrice + addon;
+      return acc + finalPrice * item.quantity;
     }, 0);
+
     const shipping = Number(deliveryPrice ?? 5000);
     const totalPrice = subtotal + shipping;
 
@@ -62,11 +72,22 @@ export async function createOrder({ name, phoneNumber, address, items, deliveryP
         address: address.trim(),
         totalPrice,
         items: {
-          create: items.map((item) => ({
-            productId: Number(item.id),
-            quantity: item.quantity,
-            price: Number(productMap[Number(item.id)]?.endPrice ?? item.price),
-          })),
+          create: items.map((item) => {
+            const p = productMap[Number(item.id)];
+            const basePrice = Number(p?.endPrice ?? item.price);
+            let addon = 0;
+            if (item.size && Array.isArray(p?.sizes)) {
+              const sizeObj = p.sizes.find((s) => s.name === item.size);
+              addon = Number(sizeObj?.price || 0);
+            }
+            return {
+              productId: Number(item.id),
+              quantity: item.quantity,
+              price: basePrice + addon,
+              flavor: item.flavor,
+              size: item.size,
+            };
+          }),
         },
       },
       include: { items: true },

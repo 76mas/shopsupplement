@@ -161,7 +161,7 @@ export async function deleteOrder(id) {
 // ─────────────────────────────────────────────
 //  ADD ITEM — إضافة منتج لطلب موجود
 // ─────────────────────────────────────────────
-export async function addOrderItem(orderId, { productId, quantity }) {
+export async function addOrderItem(orderId, { productId, quantity, flavor, size }) {
   if (!orderId || !productId || !quantity) {
     return { success: false, message: 'البيانات غير مكتملة' };
   }
@@ -169,7 +169,7 @@ export async function addOrderItem(orderId, { productId, quantity }) {
   try {
     const product = await prisma.product.findFirst({
       where: { id: Number(productId), deleteAt: null },
-      select: { id: true, name: true, endPrice: true, isAvailable: true },
+      select: { id: true, name: true, endPrice: true, isAvailable: true, sizes: true },
     });
 
     if (!product)          return { success: false, message: 'المنتج غير موجود' };
@@ -183,7 +183,13 @@ export async function addOrderItem(orderId, { productId, quantity }) {
     const prevSubtotal = orderBefore.items.reduce((s, i) => s + Number(i.price) * i.quantity, 0);
     const shipping     = Number(orderBefore.totalPrice) - prevSubtotal; // ← نحافظ على التوصيل
 
-    const price = Number(product.endPrice); // سعر المنتج المُضاف
+    // ── حساب السعر شاملاً الزيادة الخاصة بالحجم ──
+    let addon = 0;
+    if (size && Array.isArray(product.sizes)) {
+      const sizeObj = product.sizes.find(s => s.name === size);
+      addon = Number(sizeObj?.price || 0);
+    }
+    const price = Number(product.endPrice) + addon;
 
     // أضف العنصر
     const item = await prisma.orderItem.create({
@@ -192,6 +198,8 @@ export async function addOrderItem(orderId, { productId, quantity }) {
         productId: Number(productId),
         quantity:  Number(quantity),
         price,
+        flavor:    flavor || null,
+        size:      size || null,
       },
       include: {
         product: {

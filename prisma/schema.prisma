@@ -93,6 +93,8 @@ model OrderItem {
   productId Int
   quantity  Int
   price     Decimal @db.Decimal(10, 2) // خزن السعر وقت الشراء لأن السعر بالمنتج ممكن يتغير مستقبلاً
+  flavor    String?
+  size      String?
 }
 
 model Banner {
