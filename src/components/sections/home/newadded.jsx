@@ -225,7 +225,7 @@ const NewAdded = ({ fetchedProducts = [] }) => {
 
         {/* الكاروسيل */}
         <div
-          className="-mx-5 px- md:mx-0 md:px-0 overflow-hidden cursor-grab active:cursor-grabbing"
+          className="-mx-5 px-5 md:mx-0 md:px-0 overflow-hidden cursor-grab active:cursor-grabbing"
           ref={emblaRef}
         >
           <div className="flex gap-6 md:gap-8">

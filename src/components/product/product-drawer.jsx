@@ -13,7 +13,7 @@ export default function ProductDrawer({ product, open, onOpenChange }) {
   // ──── نختار النكهة/الحجم هنا لنمررها لزر الموبايل ────
   const [selectedFlavor, setSelectedFlavor] = React.useState(0);
   const [selectedSize, setSelectedSize] = React.useState(0);
-  const { addItem, count, setOpen: setCartOpen } = useCart();
+  const { addItem, count, setOpen: setCartOpen, getItemQuantity } = useCart();
   const [added, setAdded] = React.useState(false);
 
   const snapPoints = [0.6, 1];
@@ -26,6 +26,18 @@ export default function ProductDrawer({ product, open, onOpenChange }) {
     ? product.sizes 
     : (typeof product?.sizes === 'string' ? JSON.parse(product.sizes) : []);
 
+  // ─── مزامنة الكمية مع السلة عند فتح الدرور أو تغيير النكهة/الحجم ───
+  React.useEffect(() => {
+    if (product) {
+      const currentQty = getItemQuantity(
+        product.id, 
+        flavors[selectedFlavor]?.name, 
+        sizes[selectedSize]?.name
+      );
+      setQuantity(currentQty);
+    }
+  }, [product?.id, selectedFlavor, selectedSize, open, getItemQuantity]);
+
   const handleAddToCart = () => {
     if (!product || !product.isAvailable) return;
     
@@ -35,6 +47,7 @@ export default function ProductDrawer({ product, open, onOpenChange }) {
       flavor: flavors[selectedFlavor] ?? null,
       size: sizes[selectedSize] ?? null,
       quantity,
+      isUpdate: true, // تحديث الكمية بدلاً من الإضافة عليها
     });
     setAdded(true);
     
@@ -53,9 +66,8 @@ export default function ProductDrawer({ product, open, onOpenChange }) {
     }, 600);
   };
 
-  // Reset state when product changes
+  // Reset flavor/size when product changes (but quantity is handled by sync useEffect)
   React.useEffect(() => {
-    setQuantity(1);
     setSelectedFlavor(0);
     setSelectedSize(0);
     setAdded(false);

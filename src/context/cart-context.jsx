@@ -7,19 +7,26 @@ export function CartProvider({ children }) {
   const [items, setItems] = useState([]);
   const [open, setOpen] = useState(false);
 
-  const [notification, setNotification] = useState({ show: false, name: "" });
+  const [notification, setNotification] = useState({ show: false, name: "", message: "" });
 
   // إضافة منتج للسلة
-  const addItem = useCallback((product, { flavor, size, quantity = 1 } = {}) => {
+  const addItem = useCallback((product, { flavor, size, quantity = 1, isUpdate = false } = {}) => {
     // مفتاح فريد: id + flavor + size
     const key = `${product.id}__${flavor?.name ?? ""}__${size?.name ?? ""}`;
+    let alreadyExists = false;
 
     setItems((prev) => {
       const existing = prev.find((i) => i.key === key);
       if (existing) {
-        return prev.map((i) =>
-          i.key === key ? { ...i, quantity: i.quantity + quantity } : i
-        );
+        alreadyExists = true;
+        if (isUpdate) {
+            // تحديث للكمية المحددة بالضبط (للدروّر)
+            return prev.map((i) =>
+              i.key === key ? { ...i, quantity: quantity } : i
+            );
+        }
+        // للمختصر (Quick Add) - لا نفعل شيئاً إذا كان موجوداً
+        return prev;
       }
       return [
         ...prev,
@@ -37,9 +44,25 @@ export function CartProvider({ children }) {
     });
 
     // إظهار التنبيه
-    setNotification({ show: true, name: product.name });
-    setTimeout(() => setNotification({ show: false, name: "" }), 3000);
+    if (alreadyExists && !isUpdate) {
+        setNotification({ show: true, name: product.name, message: "هذا المنتج موجود بالفعل في السلة" });
+    } else {
+        setNotification({ 
+            show: true, 
+            name: product.name, 
+            message: isUpdate ? "تم تحديث الكمية في السلة" : "تمت الإضافة بنجاح للسلة" 
+        });
+    }
+    
+    setTimeout(() => setNotification({ show: false, name: "", message: "" }), 3000);
   }, []);
+
+  // دالة لمعرفة الكمية الحالية لمنتج معين
+  const getItemQuantity = useCallback((productId, flavorName, sizeName) => {
+    const key = `${productId}__${flavorName ?? ""}__${sizeName ?? ""}`;
+    const item = items.find(i => i.key === key);
+    return item ? item.quantity : 1;
+  }, [items]);
 
   // تحديث الكمية
   const updateQuantity = useCallback((key, delta) => {
@@ -74,7 +97,8 @@ export function CartProvider({ children }) {
         total, 
         count,
         notification,
-        setNotification
+        setNotification,
+        getItemQuantity
       }}
     >
       {children}

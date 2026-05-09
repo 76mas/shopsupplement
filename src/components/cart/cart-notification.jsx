@@ -33,9 +33,11 @@ const CartNotification = () => {
 
             {/* Content */}
             <div className="flex-grow text-right">
-              <h4 className="text-black font-black text-sm md:text-base">تمت الإضافة بنجاح</h4>
-              <p className="text-gray-500 text-xs md:text-sm truncate max-w-[200px]">
+              <h4 className="text-black font-black text-sm md:text-base truncate max-w-[200px]">
                 {notification.name}
+              </h4>
+              <p className="text-gray-500 text-xs md:text-sm">
+                {notification.message || "تمت الإضافة بنجاح"}
               </p>
             </div>
 
