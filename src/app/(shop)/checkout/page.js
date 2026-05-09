@@ -285,82 +285,8 @@ const CheckoutPage = () => {
                 </div>
               )}
 
-              {/* Submit Button */}
-              <div className="pt-8 border-t border-gray-50">
-                <button
-                  onClick={handleSubmit}
-                  disabled={submitting}
-                  className={`w-full py-6 rounded-[28px] font-black text-xl transition-all active:scale-[0.98] shadow-2xl flex items-center justify-center gap-4 disabled:opacity-60 disabled:cursor-not-allowed ${
-                    paymentMethod === "store"
-                      ? "bg-black text-white hover:bg-black/90 shadow-black/20"
-                      : "bg-green-500 text-white hover:bg-green-600 shadow-green-500/20"
-                  }`}
-                >
-                  {submitting ? (
-                    <svg
-                      className="animate-spin"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                    </svg>
-                  ) : paymentMethod === "store" ? (
-                    <>
-                      تأكيد الطلب
-                      <svg
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="rotate-180"
-                      >
-                        <path d="M5 12h14M12 5l7 7-7 7" />
-                      </svg>
-                    </>
-                  ) : (
-                    <>
-                      اتمام عبر واتساب
-                      <svg
-                        width="26"
-                        height="26"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .018 5.396.015 12.03a11.934 11.934 0 001.605 6.057L0 24l6.105-1.603a11.85 11.85 0 005.935 1.579h.005c6.637 0 12.032-5.396 12.035-12.032a11.85 11.85 0 00-3.617-8.517z" />
-                      </svg>
-                    </>
-                  )}
-                </button>
-                <div className="flex items-center justify-center gap-2 mt-6 opacity-30">
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                  </svg>
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em]">
-                    تشفير آمن للبيانات
-                  </p>
-                </div>
-              </div>
             </div>
+
 
             {/* Trust Badges */}
             <div className="flex flex-wrap justify-center md:justify-start gap-10 opacity-30 px-4 mb-8">
@@ -437,6 +363,10 @@ const CheckoutPage = () => {
               subtotal={subtotal}
               shipping={shipping}
               total={total}
+              handleSubmit={handleSubmit}
+              submitting={submitting}
+              paymentMethod={paymentMethod}
+              customerData={{ name, phone: phoneNumber, address }}
             />
           </div>
         </div>
@@ -525,6 +455,10 @@ const CheckoutPage = () => {
                   subtotal={subtotal}
                   shipping={shipping}
                   total={total}
+                  handleSubmit={handleSubmit}
+                  submitting={submitting}
+                  paymentMethod={paymentMethod}
+                  customerData={{ name, phone: phoneNumber, address }}
                   isDrawer
                 />
               </Drawer.Content>
@@ -543,6 +477,10 @@ const SummaryContent = ({
   subtotal,
   shipping,
   total,
+  handleSubmit,
+  submitting,
+  paymentMethod,
+  customerData,
   isDrawer = false,
 }) => (
   <div
@@ -566,6 +504,84 @@ const SummaryContent = ({
       ملخص الطلب
     </h2>
 
+    {/* Customer Info Review */}
+    {customerData &&
+      (customerData.name || customerData.phone || customerData.address) && (
+        <div className="mb-8 p-6 bg-[#F9F9F9] border-2 border-dashed border-gray-200 rounded-[24px] relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-black/[0.02] rounded-full -mr-10 -mt-10" />
+          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4 relative z-10">
+            معلومات التوصيل
+          </h3>
+          <div className="space-y-4 relative z-10">
+            {customerData.name && (
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 text-black rounded-full bg-white flex items-center justify-center shadow-sm border border-black/5">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                </div>
+                <span className="text-sm font-black text-black">
+                  {customerData.name}
+                </span>
+              </div>
+            )}
+            {customerData.phone && (
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full text-black bg-white flex items-center justify-center shadow-sm border border-black/5">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                  </svg>
+                </div>
+                <span className="text-sm font-black text-black" dir="ltr">
+                  {customerData.phone}
+                </span>
+              </div>
+            )}
+            {customerData.address && (
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 text-black rounded-full bg-white flex items-center justify-center shadow-sm border border-black/5 shrink-0">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                </div>
+                <span className="text-sm font-bold text-black leading-relaxed">
+                  {customerData.address}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
     <div
       className={`flex flex-col gap-6 mb-10 ${!isDrawer ? "max-h-[350px]" : "max-h-[45vh]"} overflow-y-auto scrollbar-hide pr-1`}
     >
@@ -575,10 +591,7 @@ const SummaryContent = ({
         </div>
       )}
       {cartItems.map((item) => (
-        <div
-          key={item.key ?? item.id}
-          className="flex gap-5 group items-center"
-        >
+        <div key={item.key ?? item.id} className="flex gap-5 group items-center">
           <div className="w-16 h-16 rounded-[18px] overflow-hidden bg-[#F9F9F9] shrink-0 border border-gray-100">
             {item.image ? (
               <img
@@ -651,6 +664,77 @@ const SummaryContent = ({
         </span>
       </div>
     </div>
+
+    {/* Submit Button */}
+    <div className="pt-8 mt-8 border-t border-gray-100">
+      <button
+        onClick={handleSubmit}
+        disabled={submitting}
+        className={`w-full py-6 rounded-[28px] font-black text-xl transition-all active:scale-[0.98] shadow-2xl flex items-center justify-center gap-4 disabled:opacity-60 disabled:cursor-not-allowed ${
+          paymentMethod === "store"
+            ? "bg-black text-white hover:bg-black/90 shadow-black/20"
+            : "bg-green-500 text-white hover:bg-green-600 shadow-green-500/20"
+        }`}
+      >
+        {submitting ? (
+          <svg
+            className="animate-spin"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+          </svg>
+        ) : paymentMethod === "store" ? (
+          <>
+            تأكيد الطلب
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="rotate-180"
+            >
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </>
+        ) : (
+          <>
+            اتمام عبر واتساب
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .018 5.396.015 12.03a11.934 11.934 0 001.605 6.057L0 24l6.105-1.603a11.85 11.85 0 005.935 1.579h.005c6.637 0 12.032-5.396 12.035-12.032a11.85 11.85 0 00-3.617-8.517z" />
+        </svg>
+      </>
+    )}
+  </button>
+  <div className="flex items-center justify-center gap-2 mt-6 opacity-30">
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+    <p className="text-[10px] font-black uppercase tracking-[0.2em]">
+      تشفير آمن للبيانات
+    </p>
+  </div>
+</div>
   </div>
 );
 

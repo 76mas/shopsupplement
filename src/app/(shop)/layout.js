@@ -2,6 +2,7 @@ import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { CartProvider } from "@/context/cart-context";
 import CartDrawer from "@/components/cart/cart-drawer";
+import CartNotification from "@/components/cart/cart-notification";
 import { Suspense } from "react";
 
 export default function ShopLayout({ children }) {
@@ -16,6 +17,7 @@ export default function ShopLayout({ children }) {
         </main>
         <Footer />
         <CartDrawer />
+        <CartNotification />
       </div>
     </CartProvider>
   );

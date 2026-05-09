@@ -16,18 +16,18 @@ const products = [
     price: 40000,
     discountPrice: 32000,
     discount: "-20%",
-    image: "https://3km3cceozg.ucarecd.net/27771e0a-c726-4e0b-b0e1-e5aa9f66c443/-/preview/1000x1000/",
+    image:
+      "https://3km3cceozg.ucarecd.net/27771e0a-c726-4e0b-b0e1-e5aa9f66c443/-/preview/1000x1000/",
     images: [
       "https://3km3cceozg.ucarecd.net/27771e0a-c726-4e0b-b0e1-e5aa9f66c443/-/preview/1000x1000/",
     ],
-    description: "الأحماض الأمينية المتشعبة مع طاقة مضافة. يساعد في الحفاظ على العضلات أثناء التمرين ويوفر نشاطاً مستمراً.",
+    description:
+      "الأحماض الأمينية المتشعبة مع طاقة مضافة. يساعد في الحفاظ على العضلات أثناء التمرين ويوفر نشاطاً مستمراً.",
     flavors: [
       { name: "ليمون", color: "#CCFF00" },
-      { name: "توت بري", color: "#8A2BE2" }
+      { name: "توت بري", color: "#8A2BE2" },
     ],
-    sizes: [
-      { name: "30 حصة", price_suffix: "" }
-    ]
+    sizes: [{ name: "30 حصة", price_suffix: "" }],
   },
   {
     id: 1,
@@ -35,36 +35,38 @@ const products = [
     price: 95000,
     discountPrice: 80000,
     discount: "-15%",
-    image: "https://3km3cceozg.ucarecd.net/b0f4146b-cb83-443a-81aa-0d050ad95cf2/-/preview/1000x1000/",
+    image:
+      "https://3km3cceozg.ucarecd.net/b0f4146b-cb83-443a-81aa-0d050ad95cf2/-/preview/1000x1000/",
     images: [
       "https://3km3cceozg.ucarecd.net/b0f4146b-cb83-443a-81aa-0d050ad95cf2/-/preview/1000x1000/",
     ],
-    description: "البروتين الأشهر عالمياً، يحتوي على عزل بروتين مصل اللبن النقي لدعم الاستشفاء العضلي وبناء الكتلة العضلية الصافية.",
+    description:
+      "البروتين الأشهر عالمياً، يحتوي على عزل بروتين مصل اللبن النقي لدعم الاستشفاء العضلي وبناء الكتلة العضلية الصافية.",
     flavors: [
       { name: "شوكولاتة غنية", color: "#4B2C20" },
-      { name: "فانيليا", color: "#F3E5AB" }
+      { name: "فانيليا", color: "#F3E5AB" },
     ],
     sizes: [
       { name: "2.27 كجم (5 باوند)", price_suffix: "" },
-      { name: "900 غرام", price_suffix: "- 40,000 د.ع" }
-    ]
+      { name: "900 غرام", price_suffix: "- 40,000 د.ع" },
+    ],
   },
   {
     id: 2,
     name: "C4 Original Pre-Workout",
     price: 45000,
-    image: "https://3km3cceozg.ucarecd.net/59156cd8-6e11-41ee-89d3-407a86abe03b/-/preview/1000x1000/",
+    image:
+      "https://3km3cceozg.ucarecd.net/59156cd8-6e11-41ee-89d3-407a86abe03b/-/preview/1000x1000/",
     images: [
       "https://3km3cceozg.ucarecd.net/59156cd8-6e11-41ee-89d3-407a86abe03b/-/preview/1000x1000/",
     ],
-    description: "انفجار من الطاقة والتركيز قبل التمرين. يحتوي على الكافيين وبيتا ألانين لزيادة قوة التحمل والأداء البدني العالي.",
+    description:
+      "انفجار من الطاقة والتركيز قبل التمرين. يحتوي على الكافيين وبيتا ألانين لزيادة قوة التحمل والأداء البدني العالي.",
     flavors: [
       { name: "فواكه مشكلة", color: "#FF4D4D" },
-      { name: "توت أزرق", color: "#1E90FF" }
+      { name: "توت أزرق", color: "#1E90FF" },
     ],
-    sizes: [
-      { name: "30 حصة", price_suffix: "" }
-    ]
+    sizes: [{ name: "30 حصة", price_suffix: "" }],
   },
   {
     id: 3,
@@ -72,71 +74,66 @@ const products = [
     price: 35000,
     discountPrice: 28000,
     discount: "-20%",
-    image: "https://3km3cceozg.ucarecd.net/a744ef8d-4021-4d9e-aeeb-4b848423427a/-/preview/1000x1000/",
+    image:
+      "https://3km3cceozg.ucarecd.net/a744ef8d-4021-4d9e-aeeb-4b848423427a/-/preview/1000x1000/",
     images: [
       "https://3km3cceozg.ucarecd.net/a744ef8d-4021-4d9e-aeeb-4b848423427a/-/preview/1000x1000/",
     ],
-    description: "الكرياتين النقي لزيادة القوة العضلية وحجم الخلايا. مكمل أساسي لكل رياضي يسعى لزيادة أوزانه وتحسين أدائه الانفجاري.",
-    flavors: [
-      { name: "بدون نكهة", color: "#FFFFFF" }
-    ],
+    description:
+      "الكرياتين النقي لزيادة القوة العضلية وحجم الخلايا. مكمل أساسي لكل رياضي يسعى لزيادة أوزانه وتحسين أدائه الانفجاري.",
+    flavors: [{ name: "بدون نكهة", color: "#FFFFFF" }],
     sizes: [
       { name: "300 غرام", price_suffix: "" },
-      { name: "500 غرام", price_suffix: "+ 15,000 د.ع" }
-    ]
+      { name: "500 غرام", price_suffix: "+ 15,000 د.ع" },
+    ],
   },
   {
     id: 4,
     name: "Hydro Whey Protein",
     price: 110000,
-    image: "https://3km3cceozg.ucarecd.net/9f4cdacc-cb08-4d36-b675-841dbc65f346/-/preview/1000x1000/",
+    image:
+      "https://3km3cceozg.ucarecd.net/9f4cdacc-cb08-4d36-b675-841dbc65f346/-/preview/1000x1000/",
     images: [
       "https://3km3cceozg.ucarecd.net/9f4cdacc-cb08-4d36-b675-841dbc65f346/-/preview/1000x1000/",
     ],
-    description: "أسرع أنواع البروتين امتصاصاً على الإطلاق. مثالي للاستخدام المباشر بعد التمرين لتغذية العضلات ومنع الهدم العضلي.",
-    flavors: [
-      { name: "شوكولاتة", color: "#4B2C20" }
-    ],
-    sizes: [
-      { name: "1.6 كجم", price_suffix: "" }
-    ]
+    description:
+      "أسرع أنواع البروتين امتصاصاً على الإطلاق. مثالي للاستخدام المباشر بعد التمرين لتغذية العضلات ومنع الهدم العضلي.",
+    flavors: [{ name: "شوكولاتة", color: "#4B2C20" }],
+    sizes: [{ name: "1.6 كجم", price_suffix: "" }],
   },
   {
     id: 6,
     name: "Mass Tech Extreme 2000",
     price: 85000,
-    image: "https://3km3cceozg.ucarecd.net/c976d250-17c1-4537-b9f0-26cc8ec78406/-/preview/1000x1000/",
+    image:
+      "https://3km3cceozg.ucarecd.net/c976d250-17c1-4537-b9f0-26cc8ec78406/-/preview/1000x1000/",
     images: [
       "https://3km3cceozg.ucarecd.net/c976d250-17c1-4537-b9f0-26cc8ec78406/-/preview/1000x1000/",
     ],
-    description: "الخيار الأول للضخامة وزيادة الوزن. يحتوي على كمية هائلة من الكربوهيدرات والبروتين والسعرات الحرارية لكسر ثبات الوزن.",
-    flavors: [
-      { name: "شوكولاتة غنية", color: "#4B2C20" }
-    ],
-    sizes: [
-      { name: "5.44 كجم (12 باوند)", price_suffix: "" }
-    ]
+    description:
+      "الخيار الأول للضخامة وزيادة الوزن. يحتوي على كمية هائلة من الكربوهيدرات والبروتين والسعرات الحرارية لكسر ثبات الوزن.",
+    flavors: [{ name: "شوكولاتة غنية", color: "#4B2C20" }],
+    sizes: [{ name: "5.44 كجم (12 باوند)", price_suffix: "" }],
   },
   {
     id: 7,
     name: "Nitro Tech Isolate",
     price: 98000,
-    image: "https://3km3cceozg.ucarecd.net/d9974449-c794-4e5f-b211-1836d52bebae/-/preview/1000x1000/",
+    image:
+      "https://3km3cceozg.ucarecd.net/d9974449-c794-4e5f-b211-1836d52bebae/-/preview/1000x1000/",
     images: [
-      "https://3km3cceozg.ucarecd.net/d9974449-c794-4e5f-b211-1836d52bebae/-/preview/1000x1000/"
+      "https://3km3cceozg.ucarecd.net/d9974449-c794-4e5f-b211-1836d52bebae/-/preview/1000x1000/",
     ],
-    description: "بروتين معزول عالي الجودة يحتوي على نسبة عالية من الأحماض الأمينية، مصمم لدعم القوة وبناء العضلات الصافية بدون دهون.",
-    flavors: [
-      { name: "فانيليا", color: "#F3E5AB" }
-    ],
-    sizes: [
-      { name: "1.8 كجم", price_suffix: "" }
-    ]
-  }
+    description:
+      "بروتين معزول عالي الجودة يحتوي على نسبة عالية من الأحماض الأمينية، مصمم لدعم القوة وبناء العضلات الصافية بدون دهون.",
+    flavors: [{ name: "فانيليا", color: "#F3E5AB" }],
+    sizes: [{ name: "1.8 كجم", price_suffix: "" }],
+  },
 ];
 
 const NewAdded = ({ fetchedProducts = [] }) => {
-  const displayProducts = fetchedProducts.length > 0 ? fetchedProducts : products;
+  const displayProducts =
+    fetchedProducts.length > 0 ? fetchedProducts : products;
   const router = useRouter();
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -188,8 +185,8 @@ const NewAdded = ({ fetchedProducts = [] }) => {
 
           <div className="flex gap-4 mb-2">
             <button
-              onClick={scrollPrev}
-              className="w-12 h-12 rounded-full border border-black/10 flex items-center justify-center hover:bg-black hover:text-white transition-all cursor-pointer group"
+              onClick={scrollNext}
+              className="w-12 h-12 text-black rounded-full border border-black/10 flex items-center justify-center hover:bg-black hover:text-white transition-all cursor-pointer group rotate-180"
             >
               <svg
                 width="20"
@@ -204,10 +201,10 @@ const NewAdded = ({ fetchedProducts = [] }) => {
                 <line x1="19" y1="12" x2="5" y2="12" />
                 <polyline points="12 19 5 12 12 5" />
               </svg>
-            </button>
+            </button>{" "}
             <button
-              onClick={scrollNext}
-              className="w-12 h-12 rounded-full border border-black/10 flex items-center justify-center hover:bg-black hover:text-white transition-all cursor-pointer group rotate-180"
+              onClick={scrollPrev}
+              className="w-12 h-12 text-black rounded-full border border-black/10 flex items-center justify-center hover:bg-black hover:text-white transition-all cursor-pointer group"
             >
               <svg
                 width="20"
@@ -228,7 +225,7 @@ const NewAdded = ({ fetchedProducts = [] }) => {
 
         {/* الكاروسيل */}
         <div
-          className="overflow-hidden cursor-grab active:cursor-grabbing px-2"
+          className="-mx-5 px- md:mx-0 md:px-0 overflow-hidden cursor-grab active:cursor-grabbing"
           ref={emblaRef}
         >
           <div className="flex gap-6 md:gap-8">
@@ -251,7 +248,7 @@ const NewAdded = ({ fetchedProducts = [] }) => {
                     className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-500"
                   />
 
-                    <motion.div
+                  <motion.div
                     style={{
                       maskImage: `url(${product.image})`,
                       maskSize: "contain",
@@ -329,10 +326,10 @@ const NewAdded = ({ fetchedProducts = [] }) => {
         </div>
 
         {/* Product Details Drawer */}
-        <ProductDrawer 
-          product={selectedProduct} 
-          open={isDrawerOpen} 
-          onOpenChange={setIsDrawerOpen} 
+        <ProductDrawer
+          product={selectedProduct}
+          open={isDrawerOpen}
+          onOpenChange={setIsDrawerOpen}
         />
       </Container>
     </section>

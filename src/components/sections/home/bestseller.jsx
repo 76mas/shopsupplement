@@ -132,7 +132,8 @@ const products = [
 ];
 
 const BestSeller = ({ fetchedProducts = [] }) => {
-  const displayProducts = fetchedProducts.length > 0 ? fetchedProducts : products;
+  const displayProducts =
+    fetchedProducts.length > 0 ? fetchedProducts : products;
   const router = useRouter();
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -185,8 +186,8 @@ const BestSeller = ({ fetchedProducts = [] }) => {
 
           <div className="flex gap-4 mb-2">
             <button
-              onClick={scrollPrev}
-              className="w-12 h-12 rounded-full border border-black/10 flex items-center justify-center hover:bg-black hover:text-white transition-all cursor-pointer group"
+              onClick={scrollNext}
+              className="w-12 h-12 rounded-full border text-black border-black/10 flex items-center justify-center hover:bg-black hover:text-white transition-all cursor-pointer group rotate-180"
             >
               <svg
                 width="20"
@@ -203,8 +204,8 @@ const BestSeller = ({ fetchedProducts = [] }) => {
               </svg>
             </button>
             <button
-              onClick={scrollNext}
-              className="w-12 h-12 rounded-full border border-black/10 flex items-center justify-center hover:bg-black hover:text-white transition-all cursor-pointer group rotate-180"
+              onClick={scrollPrev}
+              className="w-12 h-12 text-black rounded-full border border-black/10 flex items-center justify-center hover:bg-black hover:text-white transition-all cursor-pointer group"
             >
               <svg
                 width="20"
@@ -225,7 +226,7 @@ const BestSeller = ({ fetchedProducts = [] }) => {
 
         {/* الكاروسيل */}
         <div
-          className="overflow-hidden cursor-grab active:cursor-grabbing px-2"
+          className="-mx-5 px-5 md:mx-0 md:px-0 overflow-hidden w-auto md:w-full cursor-grab active:cursor-grabbing"
           ref={emblaRef}
         >
           <div className="flex gap-6 md:gap-8">

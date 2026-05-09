@@ -7,6 +7,8 @@ export function CartProvider({ children }) {
   const [items, setItems] = useState([]);
   const [open, setOpen] = useState(false);
 
+  const [notification, setNotification] = useState({ show: false, name: "" });
+
   // إضافة منتج للسلة
   const addItem = useCallback((product, { flavor, size, quantity = 1 } = {}) => {
     // مفتاح فريد: id + flavor + size
@@ -33,6 +35,10 @@ export function CartProvider({ children }) {
         },
       ];
     });
+
+    // إظهار التنبيه
+    setNotification({ show: true, name: product.name });
+    setTimeout(() => setNotification({ show: false, name: "" }), 3000);
   }, []);
 
   // تحديث الكمية
@@ -57,7 +63,19 @@ export function CartProvider({ children }) {
 
   return (
     <CartContext.Provider
-      value={{ items, open, setOpen, addItem, updateQuantity, removeItem, clearCart, total, count }}
+      value={{ 
+        items, 
+        open, 
+        setOpen, 
+        addItem, 
+        updateQuantity, 
+        removeItem, 
+        clearCart, 
+        total, 
+        count,
+        notification,
+        setNotification
+      }}
     >
       {children}
     </CartContext.Provider>
