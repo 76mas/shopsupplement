@@ -103,7 +103,7 @@ const Header = () => {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="ابحث عن مكملك الغذائي..."
-                className="w-full bg-[#F0F0F0] border-none rounded-full py-2.5 ps-12 pe-4 focus:ring-1 focus:ring-[#555]/30 outline-none text-sm placeholder:text-[#00000066] transition-all"
+                className="w-full bg-[#F0F0F0] border-none rounded-full py-2.5 ps-12 pe-4 focus:ring-1 focus:ring-[#555]/30 outline-none text-base placeholder:text-[#00000066] transition-all"
               />
             </form>
 
@@ -175,7 +175,7 @@ const Header = () => {
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
                     placeholder="ابحث عن مكملك الغذائي..."
-                    className="w-full bg-[#F0F0F0] border-none rounded-xl py-3 ps-12 pe-4 outline-none text-sm placeholder:text-[#00000066]"
+                    className="w-full bg-[#F0F0F0] border-none rounded-xl py-3 ps-12 pe-4 outline-none text-base placeholder:text-[#00000066]"
                   />
                 </form>
               </Container>
