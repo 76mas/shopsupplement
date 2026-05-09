@@ -39,8 +39,8 @@ const Header = () => {
   };
 
   return (
-    <header className="w-full text-black bg-white fixed top-0 z-50 font-sans shadow-sm">
-      <div className="bg-white border-b border-black/5 w-full">
+    <header className="w-full  text-black rounded-b-2xl md:rounded-none bg-white fixed top-0 z-50 font-sans shadow-sm">
+      <div className="bg-white rounded-b-2xl md:rounded-none border-b border-black/5 w-full">
         <Container className="flex items-center justify-between h-[72px] gap-4 mx-auto w-full relative">
 
           {/* Right: Logo & Nav */}
