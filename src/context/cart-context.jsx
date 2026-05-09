@@ -45,16 +45,22 @@ export function CartProvider({ children }) {
 
     // إظهار التنبيه
     if (alreadyExists && !isUpdate) {
-        setNotification({ show: true, name: product.name, message: "هذا المنتج موجود بالفعل في السلة" });
+        setNotification({ 
+          show: true, 
+          name: product.name, 
+          message: "هذا المنتج موجود بالفعل في السلة",
+          type: "info" 
+        });
     } else {
         setNotification({ 
             show: true, 
             name: product.name, 
-            message: isUpdate ? "تم تحديث الكمية في السلة" : "تمت الإضافة بنجاح للسلة" 
+            message: isUpdate ? "تم تحديث الكمية في السلة" : "تمت الإضافة بنجاح للسلة",
+            type: isUpdate ? "update" : "success"
         });
     }
     
-    setTimeout(() => setNotification({ show: false, name: "", message: "" }), 3000);
+    setTimeout(() => setNotification({ show: false, name: "", message: "", type: "success" }), 3000);
   }, []);
 
   // دالة لمعرفة الكمية الحالية لمنتج معين
