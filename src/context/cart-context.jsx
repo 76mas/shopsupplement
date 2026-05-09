@@ -7,18 +7,32 @@ export function CartProvider({ children }) {
   const [items, setItems] = useState([]);
   const [open, setOpen] = useState(false);
 
-  const [notification, setNotification] = useState({ show: false, name: "", message: "" });
+  const [notifications, setNotifications] = useState([]);
+
+  const removeNotification = useCallback((id) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  }, []);
+
+  const addNotification = useCallback(({ name, message, type = "success" }) => {
+    const id = Date.now();
+    setNotifications((prev) => [...prev, { id, name, message, type }]);
+    setTimeout(() => {
+      removeNotification(id);
+    }, 4000);
+  }, [removeNotification]);
+
 
   // إضافة منتج للسلة
   const addItem = useCallback((product, { flavor, size, quantity = 1, isUpdate = false } = {}) => {
     // مفتاح فريد: id + flavor + size
     const key = `${product.id}__${flavor?.name ?? ""}__${size?.name ?? ""}`;
-    let alreadyExists = false;
+    
+    // فحص الوجود قبل التحديث لضمان صحة المنطق
+    const existingItem = items.find((i) => i.key === key);
+    const alreadyExists = !!existingItem;
 
     setItems((prev) => {
-      const existing = prev.find((i) => i.key === key);
-      if (existing) {
-        alreadyExists = true;
+      if (alreadyExists) {
         if (isUpdate) {
             // تحديث للكمية المحددة بالضبط (للدروّر)
             return prev.map((i) =>
@@ -45,23 +59,21 @@ export function CartProvider({ children }) {
 
     // إظهار التنبيه
     if (alreadyExists && !isUpdate) {
-        setNotification({ 
-          show: true, 
+        addNotification({ 
           name: product.name, 
           message: "هذا المنتج موجود بالفعل في السلة",
           type: "info" 
         });
     } else {
-        setNotification({ 
-            show: true, 
+        addNotification({ 
             name: product.name, 
             message: isUpdate ? "تم تحديث الكمية في السلة" : "تمت الإضافة بنجاح للسلة",
             type: isUpdate ? "update" : "success"
         });
     }
-    
-    setTimeout(() => setNotification({ show: false, name: "", message: "", type: "success" }), 3000);
-  }, []);
+
+  }, [items, addNotification]);
+
 
   // دالة لمعرفة الكمية الحالية لمنتج معين
   const getItemQuantity = useCallback((productId, flavorName, sizeName) => {
@@ -102,8 +114,8 @@ export function CartProvider({ children }) {
         clearCart, 
         total, 
         count,
-        notification,
-        setNotification,
+        notifications,
+        removeNotification,
         getItemQuantity
       }}
     >
