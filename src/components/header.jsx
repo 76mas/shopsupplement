@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/context/cart-context";
 import { motion, AnimatePresence } from "motion/react";
+import Image from "next/image";
 
 const Header = () => {
   const router = useRouter();
@@ -49,7 +50,8 @@ const Header = () => {
               onClick={() => router.push("/")}
               className="flex items-center cursor-pointer transition-all hover:opacity-80 shrink-0"
             >
-              <span className="text-2xl font-black tracking-tighter">SUPP<span className="text-[#01caa8]">SHOP</span></span>
+              <Image width={150} height={150} src="/Logo1.png" alt="Logo" width={100} height={100} />
+              {/* <span className="text-2xl font-black tracking-tighter">SUPP<span className="text-[#01caa8]">SHOP</span></span> */}
             </div>
 
             {/* Desktop Nav */}
