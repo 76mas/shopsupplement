@@ -326,7 +326,7 @@ const ProductsContent = () => {
                   disabled={page === 1}
                   className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 rounded-xl border border-[#88888833] text-sm font-bold hover:bg-black hover:text-white hover:border-black transition-all group cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  <div className="group-hover:invert transition-all"><Right /></div>
+                  <div className="group-hover:invert transition-all text-black"><Right /></div>
                   <span className="hidden md:block">السابق</span>
                 </button>
 
@@ -354,7 +354,7 @@ const ProductsContent = () => {
                   className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 rounded-xl border border-[#88888833] text-sm font-bold hover:bg-black hover:text-white hover:border-black transition-all group cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <span className="hidden md:block">التالي</span>
-                  <div className="rotate-180 group-hover:invert transition-all"><Right /></div>
+                  <div className="rotate-180 group-hover:invert transition-all text-black"><Right /></div>
                 </button>
               </div>
             )}

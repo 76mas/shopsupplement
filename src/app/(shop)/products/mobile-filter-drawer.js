@@ -18,7 +18,7 @@ export default function MobileFilterDrawer({
   return (
     <Drawer.Root snapPoints={snapPoints} dismissible={true}>
       <Drawer.Trigger className="flex lg:hidden items-center gap-2 bg-[#F0F0F0] px-5 py-2.5 rounded-full font-bold text-sm hover:bg-[#e5e5e5] transition-all cursor-pointer">
-        فلترة <FilterIcon />
+        فلترة <FilterIcon  color="#000000"/>
       </Drawer.Trigger>
       <Drawer.Portal>
         <Drawer.Backdrop className={styles.Backdrop} />

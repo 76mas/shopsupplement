@@ -1,11 +1,13 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { getShopCategories } from "./action";
 
-export const FilterIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M13.125 11.625V20.25C13.125 20.5484 13.0065 20.8345 12.7955 21.0455C12.5845 21.2565 12.2984 21.375 12 21.375C11.7016 21.375 11.4155 21.2565 11.2045 21.0455C10.9935 20.8345 10.875 20.5484 10.875 20.25V11.625C10.875 11.3266 10.9935 11.0405 11.2045 10.8295C11.4155 10.6185 11.7016 10.5 12 10.5C12.2984 10.5 12.5845 10.6185 12.7955 10.8295C13.0065 11.0405 13.125 11.3266 13.125 11.625ZM18.75 18C18.4516 18 18.1655 18.1185 17.9545 18.3295C17.7435 18.5405 17.625 18.8266 17.625 19.125V20.25C17.625 20.5484 17.7435 20.8345 17.9545 21.0455C18.1655 21.2565 18.4516 21.375 18.75 21.375C19.0484 21.375 19.3345 21.2565 19.5455 21.0455C19.7565 20.8345 19.875 20.5484 19.875 20.25V19.125C19.875 18.8266 19.7565 18.5405 19.5455 18.3295C19.3345 18.1185 19.0484 18 18.75 18ZM21 14.25H19.875V3.75C19.875 3.45163 19.7565 3.16548 19.5455 2.9545C19.3345 2.74353 19.0484 2.625 18.75 2.625C18.4516 2.625 18.1655 2.74353 17.9545 2.9545C17.7435 3.16548 17.625 3.45163 17.625 3.75V14.25H16.5C16.2016 14.25 15.9155 14.3685 15.7045 14.5795C15.4935 14.7905 15.375 15.0766 15.375 15.375C15.375 15.6734 15.4935 15.9595 15.7045 16.1705C15.9155 16.3815 16.2016 16.5 16.5 16.5H21C21.2984 16.5 21.5845 16.3815 21.7955 16.1705C22.0065 15.9595 22.125 15.6734 22.125 15.375C22.125 15.0766 22.0065 14.7905 21.7955 14.5795C21.5845 14.3685 21.2984 14.25 21 14.25ZM5.25 15C4.95163 15 4.66548 15.1185 4.4545 15.3295C4.24353 15.5405 4.125 15.8266 4.125 16.125V20.25C4.125 20.5484 4.24353 20.8345 4.4545 21.0455C4.66548 21.2565 4.95163 21.375 5.25 21.375C5.54837 21.375 5.83452 21.2565 6.0455 21.0455C6.25647 20.8345 6.375 20.5484 6.375 20.25V16.125C6.375 15.8266 6.25647 15.5405 6.0455 15.3295C5.83452 15.1185 5.54837 15 5.25 15ZM7.5 11.25H6.375V3.75C6.375 3.45163 6.25647 3.16548 6.0455 2.9545C5.83452 2.74353 5.54837 2.625 5.25 2.625C4.95163 2.625 4.66548 2.74353 4.4545 2.9545C4.24353 3.16548 4.125 3.45163 4.125 3.75V11.25H3C2.70163 11.25 2.41548 11.3685 2.2045 11.5795C1.99353 11.7905 1.875 12.0766 1.875 12.375C1.875 12.6734 1.99353 12.9595 2.2045 13.1705C2.41548 13.3815 2.70163 13.5 3 13.5H7.5C7.79837 13.5 8.08452 13.3815 8.2955 13.1705C8.50647 12.9595 8.625 12.6734 8.625 12.375C8.625 12.0766 8.50647 11.7905 8.2955 11.5795C8.08452 11.3685 7.79837 11.25 7.5 11.25ZM14.25 6.75H13.125V3.75C13.125 3.45163 13.0065 3.16548 12.7955 2.9545C12.5845 2.74353 12.2984 2.625 12 2.625C11.7016 2.625 11.4155 2.74353 11.2045 2.9545C10.9935 3.16548 10.875 3.45163 10.875 3.75V6.75H9.75C9.45163 6.75 9.16548 6.86853 8.9545 7.0795C8.74353 7.29048 8.625 7.57663 8.625 7.875C8.625 8.17337 8.74353 8.45952 8.9545 8.6705C9.16548 8.88147 9.45163 9 9.75 9H14.25C14.5484 9 14.8345 8.88147 15.0455 8.6705C15.2565 8.45952 15.375 8.17337 15.375 7.875C15.375 7.57663 15.2565 7.29048 15.0455 7.0795C14.8345 6.86853 14.5484 6.75 14.25 6.75Z" fill="black" fillOpacity="1" />
-  </svg>
+export const FilterIcon = ({color="currentColor"}) => (
+<svg xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<path fill={color} d="M3.63 7.09V5.662c0-.442 0-.983-.059-1.425c-.089-1.151-.236-2.243-.364-3.344a.344.344 0 1 0-.688.02c-.06 1.11-.148 2.242-.187 3.324v1.416c0 .432.069.983.069 1.416c0 2.173.983 2.203 1.16 1.622A9 9 0 0 0 3.63 7.09m7.789.265c-.08.413-.07 3.933-.148 5.989a124 124 0 0 0-.108 4.69c-.01 1.564 0 3.384.137 5.075a.394.394 0 0 0 .394.383a.404.404 0 0 0 .383-.403c0-1.967.207-4.012.325-6.018c.088-1.338.157-2.695.157-4.042c-.03-1.926-.16-3.85-.393-5.763c-.069-.334-.688-.265-.747.089m-8.055 10.66a.344.344 0 0 0-.334-.344a.344.344 0 0 0-.344.344c-.098.649-.226 1.269-.295 1.918v1.652c.059.639.157 1.268.226 1.966a.393.393 0 0 0 .777 0c.069-.649.177-1.278.226-1.966v-.826q.03-.413 0-.826c-.03-.65-.157-1.27-.256-1.918M20.692 6.608V5.19c0-.432 0-.983-.06-1.425c-.097-1.112-.245-2.203-.373-3.305a.344.344 0 0 0-.688 0c-.06 1.112-.158 2.203-.187 3.314V5.2c0 .443.069.984.069 1.416c0 2.174.983 2.203 1.15 1.623c.087-.54.116-1.087.089-1.632m-17.2 3.098a2.5 2.5 0 0 0-.855.05C.542 10.157-.235 11.72.06 13.097c.787 3.678 8.005 3.461 6.727-.915a3.6 3.6 0 0 0-3.295-2.478m-2.31 3.216c-.128-.983.481-1.878 1.966-1.967a2.45 2.45 0 0 1 2.626 1.574c1.12 3.137-4.248 3.284-4.593.393M11.3.619C8.892.884 8.046 2.585 8.35 4.07a3.11 3.11 0 0 0 2.95 2.42c2.026.157 4.632-.236 3.728-3.334A3.65 3.65 0 0 0 11.3.619M12 5.84a2.31 2.31 0 0 1-2.51-1.966c-.128-.984.482-1.879 1.967-1.967a2.47 2.47 0 0 1 2.626 1.583c.914 2.616-2.085 2.34-2.085 2.35m8.556 3.423a2.8 2.8 0 0 0-.855.059c-2.095.403-2.872 1.967-2.577 3.343c.787 3.678 8.005 3.462 6.727-.914a3.61 3.61 0 0 0-3.295-2.488m-2.35 3.215c-.128-.983.482-1.878 1.967-1.966a2.47 2.47 0 0 1 2.645 1.583c1.14 3.137-4.229 3.284-4.612.383m2.222 5.104a.343.343 0 0 0-.334-.344a.344.344 0 0 0-.344.344c-.098.64-.226 1.269-.295 1.918v1.642c.059.65.157 1.278.226 1.967a.393.393 0 0 0 .777 0c.069-.65.177-1.279.226-1.967v-.816a6 6 0 0 0 0-.826c-.03-.61-.157-1.269-.256-1.918" />
+</svg>
+
 );
 
 const FilterContent = ({
@@ -18,13 +20,48 @@ const FilterContent = ({
   onApply,
 }) => {
   const [categories, setCategories] = useState([]);
+  const [showTopGradient, setShowTopGradient] = useState(false);
+  const [showBottomGradient, setShowBottomGradient] = useState(false);
+  const scrollRef = useRef(null);
   const MAX = 200000;
+
+  const checkScroll = () => {
+    if (scrollRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+      setShowTopGradient(scrollTop > 2);
+      setShowBottomGradient(scrollHeight > clientHeight && scrollTop + clientHeight < scrollHeight - 5);
+    }
+  };
 
   useEffect(() => {
     getShopCategories().then((res) => {
       if (res.success) setCategories(res.data);
     });
   }, []);
+
+  useEffect(() => {
+    checkScroll();
+    const timer = setTimeout(checkScroll, 100);
+    return () => clearTimeout(timer);
+  }, [categories]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver(() => {
+      checkScroll();
+    });
+    observer.observe(el);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [categories]);
+
+  const handleScroll = () => {
+    checkScroll();
+  };
 
   const allCount = categories.reduce((s, c) => s + (c._count?.products ?? 0), 0);
 
@@ -33,58 +70,78 @@ const FilterContent = ({
       {/* Header */}
       <div className="flex justify-between border-b border-[#88888833] pb-4 mb-4">
         <p className="font-bold text-black text-lg">تصنيف حسب</p>
-        <FilterIcon />
+        <FilterIcon color="#000000" />
       </div>
 
       {/* Categories */}
-      <div className="flex flex-col gap-3">
-        {/* "الكل" option */}
-        <div
-          onClick={() => onCategoryChange?.(null)}
-          className="flex justify-between items-center group cursor-pointer py-1"
-        >
-          <div className="flex items-center gap-3">
-            <div className={`w-5 h-5 border rounded-[6px] transition-all flex items-center justify-center ${selectedCategory === null ? "border-black" : "border-[#88888855] group-hover:border-black"}`}>
-              <div className={`w-2.5 h-2.5 bg-black rounded-[2px] transition-opacity ${selectedCategory === null ? "opacity-100" : "opacity-0 group-hover:opacity-20"}`} />
-            </div>
-            <span className="text-black font-medium">الكل</span>
-          </div>
-          <span className="text-xs text-black bg-[#f5f5f5] px-4 py-2 rounded-full font-bold">{allCount}</span>
-        </div>
+      <div className="relative">
+        {/* Top gradient overlay */}
+        <div 
+          className={`absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-white to-transparent pointer-events-none z-10 transition-opacity duration-300 ${
+            showTopGradient ? "opacity-100" : "opacity-0"
+          }`} 
+        />
 
-        {/* Dynamic categories */}
-        {categories.map((cat) => (
+        <div 
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="flex flex-col max-h-[300px] overflow-y-auto scrollbar-hide gap-3 pb-6"
+        >
+          {/* "الكل" option */}
           <div
-            key={cat.id}
-            onClick={() => onCategoryChange?.(cat.id)}
+            onClick={() => onCategoryChange?.(null)}
             className="flex justify-between items-center group cursor-pointer py-1"
           >
             <div className="flex items-center gap-3">
-              <div className={`w-5 h-5 border rounded-[6px] transition-all flex items-center justify-center ${selectedCategory === cat.id ? "border-black" : "border-[#88888855] group-hover:border-black"}`}>
-                <div className={`w-2.5 h-2.5 bg-black rounded-[2px] transition-opacity ${selectedCategory === cat.id ? "opacity-100" : "opacity-0 group-hover:opacity-20"}`} />
+              <div className={`w-5 h-5 border rounded-[6px] transition-all flex items-center justify-center ${selectedCategory === null ? "border-black" : "border-[#88888855] group-hover:border-black"}`}>
+                <div className={`w-2.5 h-2.5 bg-black rounded-[2px] transition-opacity ${selectedCategory === null ? "opacity-100" : "opacity-0 group-hover:opacity-20"}`} />
               </div>
-              <span className="text-black group-hover:text-black transition-colors font-medium">{cat.name}</span>
+              <span className="text-black font-medium">الكل</span>
             </div>
-            <span className="text-xs text-black bg-[#f5f5f5] px-4 py-2 rounded-full font-bold">
-              {cat._count?.products ?? 0}
-            </span>
+            <span className="text-xs text-black bg-[#f5f5f5] px-4 py-2 rounded-full font-bold">{allCount}</span>
           </div>
-        ))}
 
-        {/* Skeleton if loading */}
-        {categories.length === 0 && (
-          <div className="flex flex-col gap-3 animate-pulse">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="flex justify-between items-center py-1">
-                <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 bg-gray-100 rounded-[6px]" />
-                  <div className="h-4 w-24 bg-gray-100 rounded-full" />
+          {/* Dynamic categories */}
+          {categories.map((cat) => (
+            <div
+              key={cat.id}
+              onClick={() => onCategoryChange?.(cat.id)}
+              className="flex justify-between items-center group cursor-pointer py-1"
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-5 h-5 border rounded-[6px] transition-all flex items-center justify-center ${selectedCategory === cat.id ? "border-black" : "border-[#88888855] group-hover:border-black"}`}>
+                  <div className={`w-2.5 h-2.5 bg-black rounded-[2px] transition-opacity ${selectedCategory === cat.id ? "opacity-100" : "opacity-0 group-hover:opacity-20"}`} />
                 </div>
-                <div className="h-6 w-10 bg-gray-100 rounded-full" />
+                <span className="text-black group-hover:text-black transition-colors font-medium">{cat.name}</span>
               </div>
-            ))}
-          </div>
-        )}
+              <span className="text-xs text-black bg-[#f5f5f5] px-4 py-2 rounded-full font-bold">
+                {cat._count?.products ?? 0}
+              </span>
+            </div>
+          ))}
+
+          {/* Skeleton if loading */}
+          {categories.length === 0 && (
+            <div className="flex flex-col gap-3 animate-pulse">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex justify-between items-center py-1">
+                  <div className="flex items-center gap-3">
+                    <div className="w-5 h-5 bg-gray-100 rounded-[6px]" />
+                    <div className="h-4 w-24 bg-gray-100 rounded-full" />
+                  </div>
+                  <div className="h-6 w-10 bg-gray-100 rounded-full" />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Bottom gradient overlay */}
+        <div 
+          className={`absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-white to-transparent pointer-events-none z-10 transition-opacity duration-300 ${
+            showBottomGradient ? "opacity-100" : "opacity-0"
+          }`} 
+        />
       </div>
 
       {/* Price Range */}

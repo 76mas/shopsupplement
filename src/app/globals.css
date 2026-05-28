@@ -56,3 +56,11 @@ body {
 .animate-bounce-subtle {
   animation: bounce-subtle 2s infinite;
 }
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

@@ -7,6 +7,9 @@ import CustomerComments from "@/components/sections/home/custmorcomints";
 
 import prisma from "@/lib/prisma";
 
+
+
+
 export default async function Home() {
   const banners = await prisma.banner.findMany();
   const firstBanner = banners.find(b => b.type === "FIRST");
